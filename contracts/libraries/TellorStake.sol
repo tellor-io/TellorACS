@@ -35,7 +35,7 @@ library TellorStake {
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
     * can withdraw the deposit
     */
-    function requestStakingWithdraw(TellorStorage.TellorStorageStruct storage self) public {
+    function requestStakingWithdraw(TellorStorage.TellorStorageStruct storage self, uint _amount) public {
         TellorStorage.StakeInfo storage stakes = self.stakerDetails[msg.sender];
         //Require that the miner is staked
         require(stakes.currentStatus == 1, "Miner is not staked");
@@ -44,19 +44,16 @@ library TellorStake {
                 require(_amount < stakes.)
         for(uint i=_amount / minimumStake; i >=0 ){
             removeFromStakerArray(stakes.stakePosition[i],msg.sender);
-            stakes.amountStaked -= _amount;
         }
 
-        uniqueStakers += 1;
-        totalStaked -= _amount;
-
-        //Change the miner staked to locked to be withdrawStake
+       //Change the miner staked to locked to be withdrawStake
         if (stakes.amountStaked == 0){
             stakes.currentStatus = 2;
             self.uintVars[keccak256("stakerCount")] -= 1;
         }
 
         stakes.withdrawDate = now - (now % 86400);
+        stakes.withdrawAmount = _amount;
         emit StakeWithdrawRequested(msg.sender);
     }
 
@@ -67,9 +64,15 @@ library TellorStake {
         TellorStorage.StakeInfo storage stakes = self.stakerDetails[msg.sender];
         //Require the staker has locked for withdraw(currentStatus ==2) and that 7 days have
         //passed by since they locked for withdraw
-        require(now - (now % 86400) - stakes.startDate >= 7 days, "7 days didn't pass");
-        require(stakes.currentStatus == 2, "Miner was not locked for withdrawal");
-        stakes.currentStatus = 0;
+        require(now - (now % 86400) - stakes.withdrawDate >= 7 days, "7 days didn't pass");
+        require(stakes.currentStatus !=3 , "Miner was not locked for withdrawal");
+        stakes.amountStaked -= stakes.withdrawAmount;
+        if (stakes.amountStaked == 0){
+            stakes.currentStatus =0 ;
+            self.uintVars[keccak256("stakerCount")] -= 1;
+            self.uintVars[keccak256("uniqueStakers")] -= 1;
+        }
+        totalStaked -= _amount;
         emit StakeWithdrawn(msg.sender);
     }
 
@@ -100,4 +103,37 @@ library TellorStake {
                 emit NewStake(staker);
     }
 
+
+    function removeFromStakerArray(uint _pos, address _staker) internal{
+        address lastAdd;
+        uint lastIndex;
+        if(_pos == stakers.length-1){
+             stakers.length--;
+            uint localIndex = stakerDetails[_staker].stakePositionArrayIndex[_pos];
+            if(localIndex == stakerDetails[msg.sender]['stakePosition'].length){
+                stakerDetails[msg.sender]['stakePosition'].length--;
+            }
+            else{
+                uint lastLocal= stakerDetails[msg.sender]['stakePosition'][length-1];
+                stakerDetails[msg.sender]['stakePosition'][localIndex] = lastLocal;
+                stakerDetails[_staker].stakePositionArrayIndex[_pos] = 0; //fix so not zero
+
+            }
+        }
+        else{
+            lastAdd = stakers[stakers.length-1];
+            stakers[_pos] = lastAdd;
+            stakers.length--;
+            uint localIndex = stakerDetails[_staker].stakePositionArrayIndex[_pos];
+            if(localIndex == stakerDetails[msg.sender]['stakePosition'].length){
+                stakerDetails[msg.sender]['stakePosition'].length--;
+            }
+            else{
+                uint lastLocal= stakerDetails[msg.sender]['stakePosition'][length-1];
+                stakerDetails[msg.sender]['stakePosition'][localIndex] = lastLocal;
+                stakerDetails[_staker].stakePositionArrayIndex[_pos] = 0; //fix so not zero
+
+            }
+        }
+    }
 }

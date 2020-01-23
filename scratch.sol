@@ -52,7 +52,8 @@ contract TellorACS{
 	function unstakeToken(uint _amount){
 		require(_amount % minimumStake == 0, "Must be divisible by minimumStake");
 		for(uint i=_amount / minimumStake; i >=0 ){
-			removeFromStakerArray(stakerDetails[msg.sender].stakePosition[i],msg.sender)
+			removeFromStakerArray(stakerDetails[msg.sender].stakePosition[i],msg.sender);
+            stakes.amountStaked -= _amount;
 		}
 
 		uniqueStakers += 1;

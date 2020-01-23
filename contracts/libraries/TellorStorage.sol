@@ -108,6 +108,7 @@ library TellorStorage {
         // keccak256("timeTarget"); //The time between blocks (mined Oracle values)
         //keccak256("minimumPayment") //The minimum payment in TRB for a data request
         // keccak256("uniqueStakers")//Number of unique stakers
+        // keccak256("lastSelected") //Time we last selected validators
         //This is a boolean that tells you if a given challenge has been completed by a given miner
         mapping(bytes32 => mapping(address => bool)) minersByChallenge;
         mapping(uint256 => uint256) requestIdByTimestamp; //minedTimestamp to apiId

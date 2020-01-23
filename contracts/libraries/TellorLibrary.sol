@@ -143,31 +143,9 @@ library TellorLibrary {
     */
     function newBlock(TellorStorage.TellorStorageStruct storage self, string memory _nonce, uint256 _requestId) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
-
-        // If the difference between the timeTarget and how long it takes to solve the challenge this updates the challenge
-        //difficulty up or donw by the difference between the target time and how long it took to solve the prevous challenge
-        //otherwise it sets it to 1
-        int256 _change = int256(SafeMath.min(1200, (now - self.uintVars[keccak256("timeOfLastNewValue")])));
-        _change = (int256(self.uintVars[keccak256("difficulty")]) * (int256(self.uintVars[keccak256("timeTarget")]) - _change)) / 4000;
-
-        if (_change < 2 && _change > -2) {
-            if (_change >= 0) {
-                _change = 1;
-            } else {
-                _change = -1;
-            }
-        }
-
-        if ((int256(self.uintVars[keccak256("difficulty")]) + _change) <= 0) {
-            self.uintVars[keccak256("difficulty")] = 1;
-        } else {
-            self.uintVars[keccak256("difficulty")] = uint256(int256(self.uintVars[keccak256("difficulty")]) + _change);
-        }
-
-        //Sets time of value submission rounded to 1 minute
+        selectNewValidators(true);
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
-
         //The sorting algorithm that sorts the values of the first five values that come in
         TellorStorage.Details[5] memory a = self.currentMiners;
         uint256 i;
@@ -389,8 +367,35 @@ library TellorLibrary {
             }
         }
     }
+    
+
+    function reselectNewValidators() public{
+        require(lastSelection < now - 30, "has not been long enough to reselect");
+        selectNewValidators(false);
+    }
 
     function randomnumber(TellorStorage.TellorStorageStruct storage self, uint _max, uint _nonce) internal returns (uint){
         return  uint(keccak256(abi.encodePacked(_nonce,now,self.uintVars[keccak256("totalTip")],msg.sender,block.difficulty,self.stakers.length))) % _max +1;
     }
+
+
+    function selectNewValidators(bool _reset) internal{
+        if(_reset):
+            selectedValidators.length = 0
+        j=0;
+        uint i=0;
+        address potentialValidator;
+        while(j < 5){
+            potentialValidator = stakers[randomnumber(stakers.length,i)];
+            for(uint k=0;k<selectedValidators.length;k++){
+                if(potentialValidator != selectedValidators[k]){
+                    selectedValidators.push(potentialValidator);
+                    emit NewValidatorsSelected(potentialValidator);
+                    j++;
+                }
+            }
+        }
+        self.uintVars[keccak256("lastSelected")] = now;
+    }
+
 }
