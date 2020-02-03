@@ -42,7 +42,7 @@ library TellorStorage {
         uint256 startDate; //stake start date
         uint256 amountStaked;
         uint[] stakePosition;
-        mapping[uint => uint] stakePositionArrayIndex;
+        mapping(uint => uint) stakePositionArrayIndex;
     }
 
 
@@ -74,7 +74,7 @@ library TellorStorage {
 
     struct TellorStorageStruct {
         address[] selectedValidators;
-        address[] internal stakers;
+        address[]  stakers; //internal--not working
         mapping(address => StakeInfo) stakerDetails;
         mapping(address => uint) missedCalls;//if your missed calls gets up to 3, you lose a TRB.  A successful retrieval resets its
         bytes32 currentChallenge; //current challenge to be solved

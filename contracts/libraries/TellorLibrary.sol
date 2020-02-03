@@ -380,9 +380,11 @@ library TellorLibrary {
 
 
     function selectNewValidators(bool _reset) internal{
-        if(_reset):
-            selectedValidators.length = 0
-        j=0;
+        // if(_reset):
+        //     selectedValidators.length = 0
+        require(_reset==true);
+        selectedValidators.length = 0;
+        uint j=0;
         uint i=0;
         address potentialValidator;
         while(j < 5){
