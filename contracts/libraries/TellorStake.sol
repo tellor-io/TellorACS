@@ -96,7 +96,6 @@ library TellorStake {
         for(uint i=0; i <= _amount / minimumStake){
             stakerDetails[msg.sender]['stakePosition'].push(stakers.length);
             stakerDetails[msg.sender].stakePositionArrayIndex[stakers.length] = i;
-
             stakers.push(msg.sender);
         }
         stakerDetails[msg.sender].currentStatus = 1;
@@ -104,7 +103,7 @@ library TellorStake {
         stakerDetails[msg.sender].amountStaked += _amount;
         uniqueStakers += 1;
         totalStaked += _amount;
-                emit NewStake(staker);
+        emit NewStake(staker);
     }
 
 
@@ -121,7 +120,6 @@ library TellorStake {
                 uint lastLocal= stakerDetails[msg.sender]['stakePosition'][length-1];
                 stakerDetails[msg.sender]['stakePosition'][localIndex] = lastLocal;
                 stakerDetails[_staker].stakePositionArrayIndex[_pos] = 0; //fix so not zero
-
             }
         }
         else{
