@@ -75,7 +75,6 @@ library TellorStorage {
     struct TellorStorageStruct {
         address[] selectedValidators;
         address[]  stakers; //internal--not working
-        mapping(address => StakeInfo) stakerDetails;
         mapping(address => uint) missedCalls;//if your missed calls gets up to 3, you lose a TRB.  A successful retrieval resets its
         bytes32 currentChallenge; //current challenge to be solved
         uint256[51] requestQ; //uint50 array of the top50 requests by payment amount

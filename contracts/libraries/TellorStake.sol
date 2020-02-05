@@ -45,7 +45,7 @@ library TellorStake {
         require(_amount < stakes.amountStaked);
         
         
-        for(uint i=0; i <= _amount / minimumStake) {
+        for(uint i=0; i <= _amount / minimumStake; i++) {
             removeFromStakerArray(stakes.stakePosition[i],msg.sender);
         }
 
@@ -93,7 +93,7 @@ library TellorStake {
         uint minimumStake = self.uintVars[keccak256("minimumStake")];
         require(_amount > minimumStake, "You must stake a certain amount");
         require(_amount % minimumStake == 0, "Must be divisible by minimumStake");
-        for(uint i=0; i <= _amount / minimumStake){
+        for(uint i=0; i <= _amount / minimumStake; i++){
             stakerDetails[msg.sender]['stakePosition'].push(stakers.length);
             stakerDetails[msg.sender].stakePositionArrayIndex[stakers.length] = i;
             stakers.push(msg.sender);
