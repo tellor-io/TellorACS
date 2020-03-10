@@ -234,4 +234,39 @@ library TellorDispute {
         self.disputesById[disputeId].disputeUintVars[keccak256("fee")] = self.uintVars[keccak256("disputeFee")];
         self.disputesById[disputeId].disputeUintVars[keccak256("minExecutionDate")] = now + 7 days;
     }
-}
+
+
+    /**
+    * @dev this function allows the dispute fee to fluctuate based on the number of miners on the system.
+    * The floor for the fee is 15e18.
+    */
+    function updateDisputeFee(TellorStorage.TellorStorageStruct storage self, uint disputeId) public {
+        self.disputesById[disputeId].disputeUintVars[keccak256("DisputeRound")]++;
+        //if the number of staked miners divided by the target count of staked miners is less than 1
+        if ((self.uintVars[keccak256("stakerCount")] * 1000) / self.uintVars[keccak256("targetMiners")] < 1000) {
+            //Set the dispute fee at stakeAmt * (1- stakerCount/targetMiners)
+            //or at the its minimum of 15e18
+            self.uintVars[keccak256("disputeFee")] = SafeMath.max(
+                15e18,
+                self.uintVars[keccak256("stakeAmount")].mul(
+                    1000 - (self.uintVars[keccak256("stakerCount")] * 1000) / self.uintVars[keccak256("targetMiners")]
+                ) /
+                    1000
+            );
+        } else {
+            //otherwise set the dispute fee at 15e18 (the floor/minimum fee allowed)
+            self.uintVars[keccak256("disputeFee")] = 15e18;
+        }
+
+        if (self.disputesById[disputeId].disputeUintVars[keccak256("DisputeRound")]  == 0 ) {
+            self.disputesById[disputeId].disputeUintVars[keccak256("fee")] = self.uintVars[keccak256("disputeFee")];
+        } else {
+           self.disputesById[disputeId].disputeUintVars[keccak256("fee")] * self.disputesById[disputeId].disputeUintVars[keccak256("DisputeRound")] * 2;
+        }
+        
+    }
+
+
+
+
+}   
