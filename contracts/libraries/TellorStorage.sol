@@ -76,6 +76,7 @@ library TellorStorage {
         address[] selectedValidators;
         address[]  stakers; //internal--not working
         mapping(address => uint) missedCalls;//if your missed calls gets up to 3, you lose a TRB.  A successful retrieval resets its
+        mapping(address => bool) validValidator; //ensures only selected validators can sumbmit data
         bytes32 currentChallenge; //current challenge to be solved
         uint256[51] requestQ; //uint50 array of the top50 requests by payment amount
         uint256[] newValueTimestamps; //array of all timestamps requested
