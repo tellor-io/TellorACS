@@ -136,18 +136,6 @@ library TellorLibrary {
     }
 
 
-//should i do this in new block?
-function trackMissedCalls (_requestId){
-        TellorStorage.Request storage _request = self.requestDetails[_requestId];
-        TellorStorage.Details[5] memory a = self.currentMiners;
-        //loop through validators and remove as they submit values
-        potentialValidator[]
-        //if no new block is added and validators are reselected
-        //loop through potentialValidator and increase missed calls for 
-        //all left in the array.
-        address badValidator;
-        self.missedCalls[badValidator]++;
-}
     /**
     * @dev This fucntion is called by submitMiningSolution and adjusts the difficulty, sorts and stores the first
     * 5 values received, pays the miners, the dev share and assigns a new challenge
@@ -280,7 +268,7 @@ function trackMissedCalls (_requestId){
         //Check the miner is submitting the pow for the current request Id
         require(_requestId == self.uintVars[keccak256("currentRequestId")], "RequestId is wrong");
         
-        //loop through validators ensure the miner address is a selected validator
+        //Check the validator submitting data is one of the selected validators
         require(validValidator[msg.sender] == true, "Not a selected validator");
 
 
@@ -314,19 +302,21 @@ function trackMissedCalls (_requestId){
             newBlock(self, _nonce, _requestId);
         }
 
-        validValidator[msg.sender] == false;
+
         //keep track of selected miners that submitted a value.
-        //and increase missed calls
+        //and increase missed calls for those who didn't
            uint256 b;
            for (b = 1; b < 5; b++) {
                 address temp3 = selectedValidators[b];
                 if (validValidator[temp3] == true){
-                    missedCalls[temp3]++;
                     reselectNewValidators();
+                    missedCalls[temp3]++;
+                    validValidator[temp3] == false;
                 }
            }
 
-
+        //Once a validator submits data set their status back to false
+        validValidator[msg.sender] == false;
 
     }
 
