@@ -145,7 +145,7 @@ library TellorLibrary {
     */
     function newBlock(TellorStorage.TellorStorageStruct storage self, string memory _nonce, uint256 _requestId) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
-        selectNewValidators(true);
+        selectNewValidators(self,true);
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
         //The sorting algorithm that sorts the values of the first five values that come in
@@ -174,7 +174,7 @@ library TellorLibrary {
                 address temp3 = self.selectedValidators[b];
                 if (self.validValidator[temp3] == true){
                     self.missedCalls[temp3]++;
-                    reselectNewValidators();
+                    reselectNewValidators(self);
                     if (self.missedCalls[temp3] == 3){
                         TellorTransfer.doTransfer(self, temp3, self.addressVars[keccak256("_owner")], 1e18);
                     }
@@ -310,7 +310,7 @@ library TellorLibrary {
            for (b = 1; b < 5; b++) {
                 address temp3 = self.selectedValidators[b];
                 if (self.validValidator[temp3] == true){
-                    reselectNewValidators();
+                    reselectNewValidators(self);
                     self.missedCalls[temp3]++;
                     self.validValidator[temp3] == false;
                 }
@@ -414,7 +414,7 @@ library TellorLibrary {
     */
     function reselectNewValidators(TellorStorage.TellorStorageStruct storage self) public{
         require( self.uintVars[keccak256("lastSelection")] < now - 30, "has not been long enough reselect");
-        selectNewValidators(false);
+        selectNewValidators(self,false);
     }
 
     /**
@@ -437,7 +437,7 @@ library TellorLibrary {
         uint i=0;
         address potentialValidator;
         while(j < 5){
-            potentialValidator = self.stakers[randomnumber(self.stakers.length,i)];
+            potentialValidator = self.stakers[randomnumber(self,self.stakers.length,i)];
             for(uint k=0;k<self.selectedValidators.length;k++){
                 if(potentialValidator != self.selectedValidators[k]){
                     self.selectedValidators.push(potentialValidator);
