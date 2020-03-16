@@ -113,7 +113,7 @@ library TellorStake {
 
     function removeFromStakerArray(TellorStorage.TellorStorageStruct storage self, uint _pos, address _staker) internal{
         address lastAdd;
-        uint lastIndex;
+        //uint lastIndex;
         if(_pos == self.stakers.length-1){
              self.stakers.length--;
             uint localIndex = self.stakerDetails[_staker].stakePositionArrayIndex[_pos];
