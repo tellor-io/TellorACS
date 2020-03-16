@@ -41,6 +41,8 @@ library TellorStorage {
         uint256 currentStatus; //0-not Staked, 1=Staked, 2=LockedForWithdraw 3= OnDispute
         uint256 startDate; //stake start date
         uint256 amountStaked;
+        uint256 withdrawDate;
+        uint256 withdrawAmount;
         uint[] stakePosition;
         mapping(uint => uint) stakePositionArrayIndex;
     }

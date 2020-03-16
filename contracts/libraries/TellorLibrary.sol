@@ -43,6 +43,7 @@ library TellorLibrary {
     event NonceSubmitted(address indexed _miner, string _nonce, uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
     event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);
     event OwnershipProposed(address indexed _previousOwner, address indexed _newOwner);
+    event NewValidatorsSelected(address _validator);
 
     /*Functions*/
 
@@ -170,11 +171,11 @@ library TellorLibrary {
         //and increase missed calls
            uint256 b;
            for (b = 1; b < 5; b++) {
-                address temp3 = selectedValidators[b];
-                if (validValidator[temp3] == true){
-                    missedCalls[temp3]++;
+                address temp3 = self.selectedValidators[b];
+                if (self.validValidator[temp3] == true){
+                    self.missedCalls[temp3]++;
                     reselectNewValidators();
-                    if (missedCalls[temp3] == 3){
+                    if (self.missedCalls[temp3] == 3){
                         TellorTransfer.doTransfer(self, temp3, self.addressVars[keccak256("_owner")], 1e18);
                     }
                 }
@@ -269,7 +270,7 @@ library TellorLibrary {
         require(_requestId == self.uintVars[keccak256("currentRequestId")], "RequestId is wrong");
         
         //Check the validator submitting data is one of the selected validators
-        require(validValidator[msg.sender] == true, "Not a selected validator");
+        require(self.validValidator[msg.sender] == true, "Not a selected validator");
 
 
         //Saving the challenge information as unique by using the msg.sender
@@ -307,16 +308,16 @@ library TellorLibrary {
         //and increase missed calls for those who didn't
            uint256 b;
            for (b = 1; b < 5; b++) {
-                address temp3 = selectedValidators[b];
-                if (validValidator[temp3] == true){
+                address temp3 = self.selectedValidators[b];
+                if (self.validValidator[temp3] == true){
                     reselectNewValidators();
-                    missedCalls[temp3]++;
-                    validValidator[temp3] == false;
+                    self.missedCalls[temp3]++;
+                    self.validValidator[temp3] == false;
                 }
            }
 
         //Once a validator submits data set their status back to false
-        validValidator[msg.sender] == false;
+        self.validValidator[msg.sender] == false;
 
     }
 
@@ -411,8 +412,8 @@ library TellorLibrary {
     /**
     * @dev Reselects validators if any of the first five fail to submit data
     */
-    function reselectNewValidators() public{
-        require(lastSelection < now - 30, "has not been long enough to reselect");
+    function reselectNewValidators(TellorStorage.TellorStorageStruct storage self) public{
+        require( self.uintVars[keccak256("lastSelection")] < now - 30, "has not been long enough reselect");
         selectNewValidators(false);
     }
 
@@ -427,23 +428,23 @@ library TellorLibrary {
     * @dev Selects validators
     * @param _reset true if validators need to be selected
     */
-    function selectNewValidators(bool _reset) internal{
+    function selectNewValidators(TellorStorage.TellorStorageStruct storage self, bool _reset) internal{
         // if(_reset):
         //     selectedValidators.length = 0
         require(_reset==true);
-        selectedValidators.length = 0;
+        self.selectedValidators.length = 0;
         uint j=0;
         uint i=0;
         address potentialValidator;
         while(j < 5){
-            potentialValidator = stakers[randomnumber(stakers.length,i)];
-            for(uint k=0;k<selectedValidators.length;k++){
-                if(potentialValidator != selectedValidators[k]){
-                    selectedValidators.push(potentialValidator);
+            potentialValidator = self.stakers[randomnumber(self.stakers.length,i)];
+            for(uint k=0;k<self.selectedValidators.length;k++){
+                if(potentialValidator != self.selectedValidators[k]){
+                    self.selectedValidators.push(potentialValidator);
                     emit NewValidatorsSelected(potentialValidator);
+                    self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
                     j++;
-                    validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
-                }
+               }
             }
         }
         self.uintVars[keccak256("lastSelected")] = now;

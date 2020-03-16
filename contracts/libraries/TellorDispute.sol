@@ -191,9 +191,11 @@ library TellorDispute {
     }
 
 
-    function unlockDisputeFee (){
+    function unlockDisputeFee (TellorStorage.TellorStorageStruct storage self, uint _disputeId) public {
+        TellorStorage.Dispute storage disp = self.disputesById[_disputeId];
         require(now > disp.disputeUintVars[keccak256("DisputeLock")], "Time for voting haven't elapsed");
         if (disp.disputeVotePassed == true){
+                TellorStorage.StakeInfo storage stakes = self.stakerDetails[disp.reportedMiner];
                 //if reported miner stake has not been slashed yet, slash them and return the fee to reporting party
                 if (stakes.currentStatus == 3) {
                     //Changing the currentStatus and startDate unstakes the reported miner and allows for the
@@ -203,7 +205,7 @@ library TellorDispute {
      
                     //Decreases the stakerCount since the miner's stake is being slashed
                     self.uintVars[keccak256("stakerCount")]--;
-                    updateDisputeFee(self);
+                    updateDisputeFee(self, _disputeId);
      
                     //Transfers the StakeAmount from the reporded miner to the reporting party
                     TellorTransfer.doTransfer(self, disp.reportedMiner, disp.reportingParty, self.uintVars[keccak256("stakeAmount")]);
@@ -275,7 +277,7 @@ library TellorDispute {
            self.disputesById[disputeId].disputeUintVars[keccak256("fee")] * self.disputesById[disputeId].disputeUintVars[keccak256("DisputeRound")] * 2;
         }
 
-TellorStorage.Dispute storage disp = self.disputesById[_disputeId];
+TellorStorage.Dispute storage disp = self.disputesById[disputeId];
 //If the vote is not a proposed fork
         if (disp.isPropFork == false) {
         self.disputesById[disputeId].disputeUintVars[keccak256("DisputeLock")] == now + 1 days;
