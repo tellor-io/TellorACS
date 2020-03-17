@@ -2,10 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./libraries/SafeMath.sol";
 import "./libraries/TellorStorage.sol";
-import "./libraries/TellorTransfer.sol";
-import "./libraries/TellorGettersLibrary.sol";
-import "./libraries/TellorStake.sol";
-
+import "./libraries/Utilities.sol";
 /**
 * @title Tellor Getters
 * @dev Oracle contract with all tellor getter functions. The logic for the functions on this contract
@@ -14,11 +11,7 @@ import "./libraries/TellorStake.sol";
 contract TellorGetters {
     using SafeMath for uint256;
 
-    using TellorTransfer for TellorStorage.TellorStorageStruct;
-    using TellorGettersLibrary for TellorStorage.TellorStorageStruct;
-    using TellorStake for TellorStorage.TellorStorageStruct;
-
-    TellorStorage.TellorStorageStruct tellor;
+    TellorStorage.TellorStorageStruct self;
 
     /**
     * @param _user address
@@ -26,7 +19,7 @@ contract TellorGetters {
     * @return Returns the remaining allowance of tokens granted to the _spender from the _user
     */
     function allowance(address _user, address _spender) external view returns (uint256) {
-        return tellor.allowance(_user, _spender);
+        return self.allowed[_user][_spender];
     }
 
     /**
@@ -36,7 +29,15 @@ contract TellorGetters {
     * @return true if the user is alloed to trade the amount specified
     */
     function allowedToTrade(address _user, uint256 _amount) external view returns (bool) {
-        return tellor.allowedToTrade(_user, _amount);
+                if (self.stakerDetails[_user].currentStatus > 0) {
+            //Removes the stakeAmount from balance if the _user is staked
+            if (balanceOf(_user).sub(self.uintVars[keccak256("stakeAmount")]).sub(_amount) >= 0) {
+                return true;
+            }
+        } else if (balanceOf(_user).sub(_amount) >= 0) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -45,7 +46,7 @@ contract TellorGetters {
     * @return Returns the balance associated with the passed in _user
     */
     function balanceOf(address _user) external view returns (uint256) {
-        return tellor.balanceOf(_user);
+        return balanceOfAt(_user, block.number);
     }
 
     /**
@@ -55,9 +56,38 @@ contract TellorGetters {
     * @return The balance at _blockNumber
     */
     function balanceOfAt(address _user, uint256 _blockNumber) external view returns (uint256) {
-        return tellor.balanceOfAt(_user, _blockNumber);
+                if ((self.balances[_user].length == 0) || (self.balances[_user][0].fromBlock > _blockNumber)) {
+            return 0;
+        } else {
+            return getBalanceAt(_user, _blockNumber);
+        }
     }
 
+
+    /**
+    * @dev Getter for balance for owner on the specified _block number
+    * @param checkpoints gets the mapping for the balances[owner]
+    * @param _block is the block number to search the balance on
+    * @return the balance at the checkpoint
+    */
+    function getBalanceAt(address _party, uint256 _block) public view returns (uint256) {
+        TellorStorage.Checkpoint[] storage checkpoints = self.balances[_party];
+        if (checkpoints.length == 0) return 0;
+        if (_block >= checkpoints[checkpoints.length - 1].fromBlock) return checkpoints[checkpoints.length - 1].value;
+        if (_block < checkpoints[0].fromBlock) return 0;
+        // Binary search of the value in the array
+        uint256 min = 0;
+        uint256 max = checkpoints.length - 1;
+        while (max > min) {
+            uint256 mid = (max + min + 1) / 2;
+            if (checkpoints[mid].fromBlock <= _block) {
+                min = mid;
+            } else {
+                max = mid - 1;
+            }
+        }
+        return checkpoints[min].value;
+    }
     /**
     * @dev This function tells you if a given challenge has been completed by a given miner
     * @param _challenge the challenge to search for
@@ -65,7 +95,7 @@ contract TellorGetters {
     * @return true if the _miner address provided solved the
     */
     function didMine(bytes32 _challenge, address _miner) external view returns (bool) {
-        return tellor.didMine(_challenge, _miner);
+        return self.minersByChallenge[_challenge][_miner];
     }
 
     /**
@@ -75,7 +105,7 @@ contract TellorGetters {
     * @return bool of whether or not party voted
     */
     function didVote(uint256 _disputeId, address _address) external view returns (bool) {
-        return tellor.didVote(_disputeId, _address);
+        return self.disputesById[_disputeId].voted[_address];
     }
 
     /**
@@ -86,7 +116,7 @@ contract TellorGetters {
     * addressVars[keccak256("tellorContract")]
     */
     function getAddressVars(bytes32 _data) external view returns (address) {
-        return tellor.getAddressVars(_data);
+                return self.addressVars[_data];
     }
 
     /**
@@ -115,7 +145,28 @@ contract TellorGetters {
         view
         returns (bytes32, bool, bool, bool, address, address, address, uint256[9] memory, int256)
     {
-        return tellor.getAllDisputeVars(_disputeId);
+        TellorStorage.Dispute storage disp = self.disputesById[_disputeId];
+        return (
+            disp.hash,
+            disp.executed,
+            disp.disputeVotePassed,
+            disp.isPropFork,
+            disp.reportedMiner,
+            disp.reportingParty,
+            disp.proposedForkAddress,
+            [
+                disp.disputeUintVars[keccak256("requestId")],
+                disp.disputeUintVars[keccak256("timestamp")],
+                disp.disputeUintVars[keccak256("value")],
+                disp.disputeUintVars[keccak256("minExecutionDate")],
+                disp.disputeUintVars[keccak256("numberOfVotes")],
+                disp.disputeUintVars[keccak256("blockNumber")],
+                disp.disputeUintVars[keccak256("minerSlot")],
+                disp.disputeUintVars[keccak256("quorum")],
+                disp.disputeUintVars[keccak256("fee")]
+            ],
+            disp.tally
+        );
     }
 
     /**
@@ -123,7 +174,14 @@ contract TellorGetters {
     * @return current challenge, curretnRequestId, level of difficulty, api/query string, and granularity(number of decimals requested), total tip for the request
     */
     function getCurrentVariables() external view returns (bytes32, uint256, uint256, string memory, uint256, uint256) {
-        return tellor.getCurrentVariables();
+               return (
+            self.currentChallenge,
+            self.uintVars[keccak256("currentRequestId")],
+            self.uintVars[keccak256("difficulty")],
+            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].queryString,
+            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("granularity")],
+            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("totalTip")]
+        );
     }
 
     /**
@@ -132,7 +190,7 @@ contract TellorGetters {
     * @return uint disputeId
     */
     function getDisputeIdByDisputeHash(bytes32 _hash) external view returns (uint256) {
-        return tellor.getDisputeIdByDisputeHash(_hash);
+        return self.disputeIdByDisputeHash[_hash];
     }
 
     /**
@@ -144,7 +202,7 @@ contract TellorGetters {
     * @return uint value for the bytes32 data submitted
     */
     function getDisputeUintVars(uint256 _disputeId, bytes32 _data) external view returns (uint256) {
-        return tellor.getDisputeUintVars(_disputeId, _data);
+        return self.disputesById[_disputeId].disputeUintVars[_data];
     }
 
     /**
@@ -153,7 +211,11 @@ contract TellorGetters {
     * @return true if the is a timestamp for the lastNewValue
     */
     function getLastNewValue() external view returns (uint256, bool) {
-        return tellor.getLastNewValue();
+        return (retrieveData(self.requestIdByTimestamp[self.uintVars[keccak256("timeOfLastNewValue")]],
+                self.uintVars[keccak256("timeOfLastNewValue")]
+            ),
+            true
+        );
     }
 
     /**
@@ -162,7 +224,12 @@ contract TellorGetters {
     * @return value for timestamp of last proof of work submited and if true if it exist or 0 and false if it doesn't
     */
     function getLastNewValueById(uint256 _requestId) external view returns (uint256, bool) {
-        return tellor.getLastNewValueById(_requestId);
+        TellorStorage.Request storage _request = self.requestDetails[_requestId];
+        if (_request.requestTimestamps.length > 0) {
+            return (retrieveData(_requestId, _request.requestTimestamps[_request.requestTimestamps.length - 1]), true);
+        } else {
+            return (0, false);
+        }
     }
 
     /**
@@ -172,7 +239,7 @@ contract TellorGetters {
     * @return uint of the blocknumber which the dispute was mined
     */
     function getMinedBlockNum(uint256 _requestId, uint256 _timestamp) external view returns (uint256) {
-        return tellor.getMinedBlockNum(_requestId, _timestamp);
+        return self.requestDetails[_requestId].minedBlockNum[_timestamp];
     }
 
     /**
@@ -182,16 +249,9 @@ contract TellorGetters {
     * @return the 5 miners' addresses
     */
     function getMinersByRequestIdAndTimestamp(uint256 _requestId, uint256 _timestamp) external view returns (address[5] memory) {
-        return tellor.getMinersByRequestIdAndTimestamp(_requestId, _timestamp);
+        return self.requestDetails[_requestId].minersByValue[_timestamp];
     }
 
-    /**
-    * @dev Get the name of the token
-    * return string of the token name
-    */
-    function getName() external view returns (string memory) {
-        return tellor.getName();
-    }
 
     /**
     * @dev Counts the number of values that have been submited for the request
@@ -201,7 +261,7 @@ contract TellorGetters {
     * @return uint count of the number of values received for the requestId
     */
     function getNewValueCountbyRequestId(uint256 _requestId) external view returns (uint256) {
-        return tellor.getNewValueCountbyRequestId(_requestId);
+         return self.requestDetails[_requestId].requestTimestamps.length;
     }
 
     /**
@@ -210,7 +270,8 @@ contract TellorGetters {
     * @return uint of reqeuestId
     */
     function getRequestIdByRequestQIndex(uint256 _index) external view returns (uint256) {
-        return tellor.getRequestIdByRequestQIndex(_index);
+        require(_index <= 50, "RequestQ index is above 50");
+        return self.requestIdByRequestQIndex[_index];
     }
 
     /**
@@ -219,16 +280,7 @@ contract TellorGetters {
     * @return uint of reqeuestId
     */
     function getRequestIdByTimestamp(uint256 _timestamp) external view returns (uint256) {
-        return tellor.getRequestIdByTimestamp(_timestamp);
-    }
-
-    /**
-    * @dev Getter function for requestId based on the queryHash
-    * @param _request is the hash(of string api and granularity) to check if a request already exists
-    * @return uint requestId
-    */
-    function getRequestIdByQueryHash(bytes32 _request) external view returns (uint256) {
-        return tellor.getRequestIdByQueryHash(_request);
+         return self.requestIdByTimestamp[_timestamp];
     }
 
     /**
@@ -236,7 +288,7 @@ contract TellorGetters {
     * @return the requestQ arrray
     */
     function getRequestQ() public view returns (uint256[51] memory) {
-        return tellor.getRequestQ();
+        return self.requestQ;
     }
 
     /**
@@ -249,7 +301,7 @@ contract TellorGetters {
     * @return uint value of the apiUintVars specified in _data for the requestId specified
     */
     function getRequestUintVars(uint256 _requestId, bytes32 _data) external view returns (uint256) {
-        return tellor.getRequestUintVars(_requestId, _data);
+        return self.requestDetails[_requestId].apiUintVars[_data];
     }
 
     /**
@@ -263,7 +315,15 @@ contract TellorGetters {
     * @return uint of current payout/tip for this requestId
     */
     function getRequestVars(uint256 _requestId) external view returns (string memory, string memory, bytes32, uint256, uint256, uint256) {
-        return tellor.getRequestVars(_requestId);
+        TellorStorage.Request storage _request = self.requestDetails[_requestId];
+        return (
+            _request.queryString,
+            _request.dataSymbol,
+            _request.queryHash,
+            _request.apiUintVars[keccak256("granularity")],
+            _request.apiUintVars[keccak256("requestQPosition")],
+            _request.apiUintVars[keccak256("totalTip")]
+        );
     }
 
     /**
@@ -273,7 +333,7 @@ contract TellorGetters {
     * @return uint startDate of staking
     */
     function getStakerInfo(address _staker) external view returns (uint256, uint256) {
-        return tellor.getStakerInfo(_staker);
+        return (self.stakerDetails[_staker].currentStatus, self.stakerDetails[_staker].startDate);
     }
 
     /**
@@ -283,15 +343,7 @@ contract TellorGetters {
     * @return address[5] array of 5 addresses ofminers that mined the requestId
     */
     function getSubmissionsByTimestamp(uint256 _requestId, uint256 _timestamp) external view returns (uint256[5] memory) {
-        return tellor.getSubmissionsByTimestamp(_requestId, _timestamp);
-    }
-
-    /**
-    * @dev Get the symbol of the token
-    * return string of the token symbol
-    */
-    function getSymbol() external view returns (string memory) {
-        return tellor.getSymbol();
+        return self.requestDetails[_requestId].valuesByTimestamp[_timestamp];
     }
 
     /**
@@ -301,7 +353,7 @@ contract TellorGetters {
     * @return uint timestamp
     */
     function getTimestampbyRequestIDandIndex(uint256 _requestID, uint256 _index) external view returns (uint256) {
-        return tellor.getTimestampbyRequestIDandIndex(_requestID, _index);
+        return self.requestDetails[_requestID].requestTimestamps[_index];
     }
 
     /**
@@ -314,7 +366,7 @@ contract TellorGetters {
     * @return uint of specified variable
     */
     function getUintVar(bytes32 _data) public view returns (uint256) {
-        return tellor.getUintVar(_data);
+        return self.uintVars[_data];
     }
 
     /**
@@ -322,7 +374,23 @@ contract TellorGetters {
     * @return onDeck/info on request with highest payout-- RequestId, Totaltips, and API query string
     */
     function getVariablesOnDeck() external view returns (uint256, uint256, string memory) {
-        return tellor.getVariablesOnDeck();
+        uint256 newRequestId = getTopRequestID(self);
+        return (
+            newRequestId,
+            self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")],
+            self.requestDetails[newRequestId].queryString
+        );
+    }
+
+        /**
+    * @dev Getter function for the request with highest payout. This function is used within the getVariablesOnDeck function
+    * @return uint _requestId of request with highest payout at the time the function is called
+    */
+    function getTopRequestID() public view returns (uint256 _requestId) {
+        uint256 _max;
+        uint256 _index;
+        (_max, _index) = Utilities.getMax(self.requestQ);
+        _requestId = self.requestIdByRequestQIndex[_index];
     }
 
     /**
@@ -332,7 +400,7 @@ contract TellorGetters {
     * @return bool true if requestId/timestamp is under dispute
     */
     function isInDispute(uint256 _requestId, uint256 _timestamp) external view returns (bool) {
-        return tellor.isInDispute(_requestId, _timestamp);
+        return self.requestDetails[_requestId].inDispute[_timestamp];
     }
 
     /**
@@ -342,7 +410,7 @@ contract TellorGetters {
     * @return value for timestamp submitted
     */
     function retrieveData(uint256 _requestId, uint256 _timestamp) external view returns (uint256) {
-        return tellor.retrieveData(_requestId, _timestamp);
+        return self.requestDetails[_requestId].finalValues[_timestamp];
     }
 
     /**
@@ -350,7 +418,7 @@ contract TellorGetters {
     * @return uint total supply
     */
     function totalSupply() external view returns (uint256) {
-        return tellor.totalSupply();
+        return self.uintVars[keccak256("total_supply")];
     }
 
 }

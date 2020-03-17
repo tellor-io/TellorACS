@@ -1,14 +1,15 @@
 pragma solidity ^0.5.0;
 
-import "./TellorGetters.sol";
-
+import "./libraries/TellorStorage.sol";
 /**
 * @title Tellor Master
 * @dev This is the Master contract with all tellor getter functions and delegate call to Tellor.
 * The logic for the functions on this contract is saved on the TellorGettersLibrary, TellorTransfer,
 * TellorGettersLibrary, and TellorStake
 */
-contract TellorMaster is TellorGetters {
+contract TellorMaster{
+    TellorStorage.TellorStorageStruct self;
+
     event NewTellorAddress(address _newTellor);
 
     /**
@@ -31,7 +32,8 @@ contract TellorMaster is TellorGetters {
     */
 
     function changeDeity(address _newDeity) external {
-        tellor.changeDeity(_newDeity);
+        require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
+        self.addressVars[keccak256("_deity")] = _newDeity;
     }
 
     /**
@@ -39,7 +41,9 @@ contract TellorMaster is TellorGetters {
     * @param _tellorContract the address of the new Tellor Contract
     */
     function changeTellorContract(address _tellorContract) external {
-        tellor.changeTellorContract(_tellorContract);
+        require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
+        self.addressVars[keccak256("tellorContract")] = _tellorContract;
+        emit NewTellorAddress(_tellorContract);
     }
 
     /**
