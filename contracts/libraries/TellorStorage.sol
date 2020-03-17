@@ -41,8 +41,10 @@ library TellorStorage {
         uint256 currentStatus; //0-not Staked, 1=Staked, 2=LockedForWithdraw 3= OnDispute
         uint256 startDate; //stake start date
         uint256 amountStaked;
+        uint256 withdrawDate;
+        uint256 withdrawAmount;
         uint[] stakePosition;
-        mapping[uint => uint] stakePositionArrayIndex;
+        mapping(uint => uint) stakePositionArrayIndex;
     }
 
 
@@ -74,9 +76,9 @@ library TellorStorage {
 
     struct TellorStorageStruct {
         address[] selectedValidators;
-        address[] internal stakers;
-        mapping(address => StakeInfo) stakerDetails;
+        address[]  stakers; //internal--not working
         mapping(address => uint) missedCalls;//if your missed calls gets up to 3, you lose a TRB.  A successful retrieval resets its
+        mapping(address => bool) validValidator; //ensures only selected validators can sumbmit data
         bytes32 currentChallenge; //current challenge to be solved
         uint256[51] requestQ; //uint50 array of the top50 requests by payment amount
         uint256[] newValueTimestamps; //array of all timestamps requested

@@ -121,8 +121,8 @@ contract Tellor {
     /**
     * @dev This function allows miners to deposit their stake.
     */
-    function depositStake() external {
-        tellor.depositStake();
+    function depositStake(uint _amount) external {
+        tellor.depositStake(_amount);
     }
 
     /**
@@ -130,8 +130,8 @@ contract Tellor {
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
     * can withdraw the stake
     */
-    function requestStakingWithdraw() external {
-        tellor.requestStakingWithdraw();
+    function requestStakingWithdraw(uint _amount) external {
+        tellor.requestStakingWithdraw(_amount);
     }
 
     /**

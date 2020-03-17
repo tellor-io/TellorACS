@@ -43,6 +43,7 @@ library TellorLibrary {
     event NonceSubmitted(address indexed _miner, string _nonce, uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
     event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);
     event OwnershipProposed(address indexed _previousOwner, address indexed _newOwner);
+    event NewValidatorsSelected(address _validator);
 
     /*Functions*/
 
@@ -135,6 +136,7 @@ library TellorLibrary {
         }
     }
 
+
     /**
     * @dev This fucntion is called by submitMiningSolution and adjusts the difficulty, sorts and stores the first
     * 5 values received, pays the miners, the dev share and assigns a new challenge
@@ -143,30 +145,48 @@ library TellorLibrary {
     */
     function newBlock(TellorStorage.TellorStorageStruct storage self, string memory _nonce, uint256 _requestId) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
-        selectNewValidators(true);
+        selectNewValidators(self,true);
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
         //The sorting algorithm that sorts the values of the first five values that come in
         TellorStorage.Details[5] memory a = self.currentMiners;
-        uint256 i;
-        for (i = 1; i < 5; i++) {
-            uint256 temp = a[i].value;
-            address temp2 = a[i].miner;
-            uint256 j = i;
-            while (j > 0 && temp < a[j - 1].value) {
-                a[j].value = a[j - 1].value;
-                a[j].miner = a[j - 1].miner;
-                j--;
-            }
-            if (j < i) {
-                a[j].value = temp;
-                a[j].miner = temp2;
-            }
-        }
+        
+                uint256 i;
+                for (i = 1; i < 5; i++) {
+                    uint256 temp = a[i].value;
+                    address temp2 = a[i].miner;
+                    uint256 j = i;
+                    while (j > 0 && temp < a[j - 1].value) {
+                        a[j].value = a[j - 1].value;
+                        a[j].miner = a[j - 1].miner;
+                        j--;
+                    }
+                    if (j < i) {
+                        a[j].value = temp;
+                        a[j].miner = temp2;
+                    }
+                }
+
+        //keep track of selected miners that submitted a value.
+        //and increase missed calls
+           uint256 b;
+           for (b = 1; b < 5; b++) {
+                address temp3 = self.selectedValidators[b];
+                if (self.validValidator[temp3] == true){
+                    self.missedCalls[temp3]++;
+                    reselectNewValidators(self);
+                    if (self.missedCalls[temp3] == 3){
+                        TellorTransfer.doTransfer(self, temp3, self.addressVars[keccak256("_owner")], 1e18);
+                    }
+                }
+           }
+
+
+
 
         //Pay the miners
         for (i = 0; i < 5; i++) {
-            TellorTransfer.doTransfer(self, address(this), a[i].miner, 5e18 + self.uintVars[keccak256("currentTotalTips")] / 5);
+            TellorTransfer.doTransfer(self, address(this), a[i].miner, self.uintVars[keccak256("currentTotalTips")] / 5);
         }
         emit NewValue(
             _requestId,
@@ -176,11 +196,6 @@ library TellorLibrary {
             self.currentChallenge
         );
 
-        //update the total supply
-        self.uintVars[keccak256("total_supply")] += 275e17;
-
-        //pay the dev-share
-        TellorTransfer.doTransfer(self, address(this), self.addressVars[keccak256("_owner")], 25e17); //The ten there is the devshare
         //Save the official(finalValue), timestamp of it, 5 miners and their submitted values for it, and its block number
         _request.finalValues[_timeOfLastNewValue] = a[2].value;
         _request.requestTimestamps.push(_timeOfLastNewValue);
@@ -253,6 +268,10 @@ library TellorLibrary {
 
         //Check the miner is submitting the pow for the current request Id
         require(_requestId == self.uintVars[keccak256("currentRequestId")], "RequestId is wrong");
+        
+        //Check the validator submitting data is one of the selected validators
+        require(self.validValidator[msg.sender] == true, "Not a selected validator");
+
 
         //Saving the challenge information as unique by using the msg.sender
         require(
@@ -283,7 +302,26 @@ library TellorLibrary {
         if (self.uintVars[keccak256("slotProgress")] == 5) {
             newBlock(self, _nonce, _requestId);
         }
+
+
+        //keep track of selected miners that submitted a value.
+        //and increase missed calls for those who didn't
+           uint256 b;
+           for (b = 1; b < 5; b++) {
+                address temp3 = self.selectedValidators[b];
+                if (self.validValidator[temp3] == true){
+                    reselectNewValidators(self);
+                    self.missedCalls[temp3]++;
+                    self.validValidator[temp3] == false;
+                }
+           }
+
+        //Once a validator submits data set their status back to false
+        self.validValidator[msg.sender] == false;
+
     }
+
+
 
     /**
     * @dev Allows the current owner to propose transfer control of the contract to a
@@ -369,30 +407,44 @@ library TellorLibrary {
     }
     
 
-    function reselectNewValidators() public{
-        require(lastSelection < now - 30, "has not been long enough to reselect");
-        selectNewValidators(false);
+
+
+    /**
+    * @dev Reselects validators if any of the first five fail to submit data
+    */
+    function reselectNewValidators(TellorStorage.TellorStorageStruct storage self) public{
+        require( self.uintVars[keccak256("lastSelection")] < now - 30, "has not been long enough reselect");
+        selectNewValidators(self,false);
     }
 
+    /**
+    * @dev Generates a random number to select validators
+    */
     function randomnumber(TellorStorage.TellorStorageStruct storage self, uint _max, uint _nonce) internal returns (uint){
         return  uint(keccak256(abi.encodePacked(_nonce,now,self.uintVars[keccak256("totalTip")],msg.sender,block.difficulty,self.stakers.length))) % _max +1;
     }
 
-
-    function selectNewValidators(bool _reset) internal{
-        if(_reset):
-            selectedValidators.length = 0
-        j=0;
+    /**
+    * @dev Selects validators
+    * @param _reset true if validators need to be selected
+    */
+    function selectNewValidators(TellorStorage.TellorStorageStruct storage self, bool _reset) internal{
+        // if(_reset):
+        //     selectedValidators.length = 0
+        require(_reset==true);
+        self.selectedValidators.length = 0;
+        uint j=0;
         uint i=0;
         address potentialValidator;
         while(j < 5){
-            potentialValidator = stakers[randomnumber(stakers.length,i)];
-            for(uint k=0;k<selectedValidators.length;k++){
-                if(potentialValidator != selectedValidators[k]){
-                    selectedValidators.push(potentialValidator);
+            potentialValidator = self.stakers[randomnumber(self,self.stakers.length,i)];
+            for(uint k=0;k<self.selectedValidators.length;k++){
+                if(potentialValidator != self.selectedValidators[k]){
+                    self.selectedValidators.push(potentialValidator);
                     emit NewValidatorsSelected(potentialValidator);
+                    self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
                     j++;
-                }
+               }
             }
         }
         self.uintVars[keccak256("lastSelected")] = now;
