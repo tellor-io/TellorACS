@@ -20,7 +20,6 @@ contract UserContract is ADOInterface{
     address payable public tellorStorageAddress;
     address public oracleIDDescriptionsAddress;
     Tellor _tellor;
-    TellorMaster _tellorm;
     OracleIDDescriptions descriptions;
 
     event OwnershipTransferred(address _previousOwner, address _newOwner);
@@ -35,7 +34,6 @@ contract UserContract is ADOInterface{
     constructor(address payable _storage) public {
         tellorStorageAddress = _storage;
         _tellor = Tellor(tellorStorageAddress); //we should delcall here
-        _tellorm = TellorMaster(tellorStorageAddress);
         owner = msg.sender;
     }
 
@@ -75,19 +73,7 @@ contract UserContract is ADOInterface{
     */
     function withdrawTokens() external {
         require(msg.sender == owner, "Sender is not owner");
-        _tellor.transfer(owner, _tellorm.balanceOf(address(this)));
-    }
-
-    /**
-    * @dev Allows the user to submit a request for data to the oracle using ETH
-    * @param c_sapi string API being requested to be mined
-    * @param _c_symbol is the short string symbol for the api request
-    * @param _granularity is the number of decimals miners should include on the submitted value
-    */
-    function requestDataWithEther(string calldata c_sapi, string calldata _c_symbol, uint256 _granularity) external payable {
-        uint _amount = (msg.value / tributePrice)*1e18;
-        require(_tellorm.balanceOf(address(this)) >= _amount, "Balance is lower than tip amount");
-        _tellor.requestData(c_sapi, _c_symbol, _granularity, _amount);
+        _tellor.transfer(owner, _tellor.balanceOf(address(this)));
     }
 
     /**
@@ -96,7 +82,7 @@ contract UserContract is ADOInterface{
     */
     function addTipWithEther(uint256 _apiId) external payable {
         uint _amount = (msg.value / tributePrice)*1e18;
-        require(_tellorm.balanceOf(address(this)) >= _amount, "Balance is lower than tip amount");
+        require(_tellor.balanceOf(address(this)) >= _amount, "Balance is lower than tip amount");
         _tellor.addTip(_apiId, _amount);
     }
 
@@ -116,10 +102,10 @@ contract UserContract is ADOInterface{
     * @return bool true if it is able to retreive a value, the value, and the value's timestamp
     */
     function getCurrentValue(uint256 _requestId) public view returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved) {
-        uint256 _count = _tellorm.getNewValueCountbyRequestId(_requestId);
+        uint256 _count = _tellor.getNewValueCountbyRequestId(_requestId);
         if (_count > 0) {
-            _timestampRetrieved = _tellorm.getTimestampbyRequestIDandIndex(_requestId, _count - 1); //will this work with a zero index? (or insta hit?)
-            return (true, _tellorm.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
+            _timestampRetrieved = _tellor.getTimestampbyRequestIDandIndex(_requestId, _count - 1); //will this work with a zero index? (or insta hit?)
+            return (true, _tellor.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
         }
         return (false, 0, 0);
     }
@@ -154,18 +140,18 @@ contract UserContract is ADOInterface{
     * which it searched for the first verified value
     */
     function getFirstVerifiedDataAfter(uint256 _requestId, uint256 _timestamp) public view returns (bool, uint256, uint256 _timestampRetrieved) {
-        uint256 _count = _tellorm.getNewValueCountbyRequestId(_requestId);
+        uint256 _count = _tellor.getNewValueCountbyRequestId(_requestId);
         if (_count > 0) {
             for (uint256 i = _count; i > 0; i--) {
                 if (
-                    _tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1) > _timestamp &&
-                    _tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1) < block.timestamp - 86400
+                    _tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1) > _timestamp &&
+                    _tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1) < block.timestamp - 86400
                 ) {
-                    _timestampRetrieved = _tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1); //will this work with a zero index? (or insta hit?)
+                    _timestampRetrieved = _tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1); //will this work with a zero index? (or insta hit?)
                 }
             }
             if (_timestampRetrieved > 0) {
-                return (true, _tellorm.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
+                return (true, _tellor.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
             }
         }
         return (false, 0, 0);
@@ -182,15 +168,15 @@ contract UserContract is ADOInterface{
         view
         returns (bool _ifRetrieve, uint256 _value, uint256 _timestampRetrieved)
     {
-        uint256 _count = _tellorm.getNewValueCountbyRequestId(_requestId);
+        uint256 _count = _tellor.getNewValueCountbyRequestId(_requestId);
         if (_count > 0) {
             for (uint256 i = _count; i > 0; i--) {
-                if (_tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1) >= _timestamp) {
-                    _timestampRetrieved = _tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1); //will this work with a zero index? (or insta hit?)
+                if (_tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1) >= _timestamp) {
+                    _timestampRetrieved = _tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1); //will this work with a zero index? (or insta hit?)
                 }
             }
             if (_timestampRetrieved > 0) {
-                return (true, _tellorm.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
+                return (true, _tellor.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
             }
         }
         return (false, 0, 0);

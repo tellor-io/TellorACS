@@ -28,7 +28,7 @@ contract TellorGetters {
     * @param _amount uint of amount
     * @return true if the user is alloed to trade the amount specified
     */
-    function allowedToTrade(address _user, uint256 _amount) external view returns (bool) {
+    function allowedToTrade(address _user, uint256 _amount) public view returns (bool) {
                 if (self.stakerDetails[_user].currentStatus > 0) {
             //Removes the stakeAmount from balance if the _user is staked
             if (balanceOf(_user).sub(self.uintVars[keccak256("stakeAmount")]).sub(_amount) >= 0) {
@@ -45,7 +45,7 @@ contract TellorGetters {
     * @param _user is the owner address used to look up the balance
     * @return Returns the balance associated with the passed in _user
     */
-    function balanceOf(address _user) external view returns (uint256) {
+    function balanceOf(address _user) public view returns (uint256) {
         return balanceOfAt(_user, block.number);
     }
 
@@ -55,7 +55,7 @@ contract TellorGetters {
     * @param _blockNumber The block number when the balance is queried
     * @return The balance at _blockNumber
     */
-    function balanceOfAt(address _user, uint256 _blockNumber) external view returns (uint256) {
+    function balanceOfAt(address _user, uint256 _blockNumber) public view returns (uint256) {
                 if ((self.balances[_user].length == 0) || (self.balances[_user][0].fromBlock > _blockNumber)) {
             return 0;
         } else {
@@ -66,7 +66,7 @@ contract TellorGetters {
 
     /**
     * @dev Getter for balance for owner on the specified _block number
-    * @param checkpoints gets the mapping for the balances[owner]
+    * @param _party gets the mapping for the balances[owner]
     * @param _block is the block number to search the balance on
     * @return the balance at the checkpoint
     */
@@ -374,7 +374,7 @@ contract TellorGetters {
     * @return onDeck/info on request with highest payout-- RequestId, Totaltips, and API query string
     */
     function getVariablesOnDeck() external view returns (uint256, uint256, string memory) {
-        uint256 newRequestId = getTopRequestID(self);
+        uint256 newRequestId = getTopRequestID();
         return (
             newRequestId,
             self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")],
@@ -409,7 +409,7 @@ contract TellorGetters {
     * @param _timestamp to retreive data/value from
     * @return value for timestamp submitted
     */
-    function retrieveData(uint256 _requestId, uint256 _timestamp) external view returns (uint256) {
+    function retrieveData(uint256 _requestId, uint256 _timestamp) public view returns (uint256) {
         return self.requestDetails[_requestId].finalValues[_timestamp];
     }
 

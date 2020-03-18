@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "./UsingTellor.sol";
-import "../TellorMaster.sol";
 import "../Tellor.sol";
 /**
 * @title UsingTellor
@@ -103,10 +102,9 @@ contract Optimistic is UsingTellor {
     function getTellorValues(uint256 _timestamp) public returns (uint256 _value, bool _didGet) {
         //We need to get the tellor value within the granularity.  If no Tellor value is available...what then?  Simply put no Value?
         //No basically, the dispute period for anyValue is within the granularity
-        TellorMaster _tellor = TellorMaster(tellorUserContract.tellorStorageAddress());
         Tellor _tellorCore = Tellor(tellorUserContract.tellorStorageAddress());
         uint256 _retrievedTimestamp;
-        uint256 _initialBalance = _tellor.balanceOf(address(this)); //Checks the balance of Tellor Tributes on this contract
+        uint256 _initialBalance = _tellorCore.balanceOf(address(this)); //Checks the balance of Tellor Tributes on this contract
         //Loops through all the Tellor requestsId's initially(in the constructor) associated with this contract data
         for (uint256 i = 1; i <= requestIds.length; i++) {
             //Get all values for that requestIds' timestamp
@@ -135,7 +133,7 @@ contract Optimistic is UsingTellor {
                 }
                 //otherwise request the ID and split the contracts initial tributes balance to equally tip all
                 //requests Ids associated with this price feed
-            } else if (_tellor.balanceOf(address(this)) > requestIds.length) {
+            } else if (_tellorCore.balanceOf(address(this)) > requestIds.length) {
                 //Request Id to be mined by adding to it's tip
                 _tellorCore.addTip(i, _initialBalance / requestIds.length);
             }

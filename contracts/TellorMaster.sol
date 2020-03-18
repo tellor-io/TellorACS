@@ -18,10 +18,15 @@ contract TellorMaster{
     * @param _tellorContract is the address for the tellor contract
     */
     constructor(address _tellorContract) public {
-        tellor.init();
-        tellor.addressVars[keccak256("_owner")] = msg.sender;
-        tellor.addressVars[keccak256("_deity")] = msg.sender;
-        tellor.addressVars[keccak256("tellorContract")] = _tellorContract;
+        //set Constants
+        self.uintVars[keccak256("decimals")] = 18;
+        self.uintVars[keccak256("targetMiners")] = 200;
+        self.uintVars[keccak256("stakeAmount")] = 10e18;
+        self.uintVars[keccak256("disputeFee")] = 10e18;
+        self.uintVars[keccak256("minimumStake")] = 500e18;
+        self.addressVars[keccak256("_owner")] = msg.sender;
+        self.addressVars[keccak256("_deity")] = msg.sender;
+        self.addressVars[keccak256("tellorContract")] = _tellorContract;
         emit NewTellorAddress(_tellorContract);
     }
 
@@ -50,7 +55,7 @@ contract TellorMaster{
     * @dev This is the fallback function that allows contracts to call the tellor contract at the address stored
     */
     function() external payable {
-        address addr = tellor.addressVars[keccak256("tellorContract")];
+        address addr = self.addressVars[keccak256("tellorContract")];
         bytes memory _calldata = msg.data;
         assembly {
             let result := delegatecall(not(0), addr, add(_calldata, 0x20), mload(_calldata), 0, 0)
