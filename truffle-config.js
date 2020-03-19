@@ -10,7 +10,7 @@ module.exports = {
       host: "localhost",
       port: 8545,
       network_id: "*",
-      gas: 6721975, // default ganache-cli value
+      gas: 30000000, // default ganache-cli value
     },
     rinkeby: {
       provider: () =>

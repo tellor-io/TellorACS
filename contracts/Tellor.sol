@@ -28,12 +28,10 @@ contract Tellor is TellorGetters{
         bytes32 _currentChallenge,
         uint256 indexed _currentRequestId,
         uint256 _difficulty,
-        uint256 _multiplier,
-        string _query,
         uint256 _totalTips
     );
     //emits when a the payout of another request is higher after adding to the payoutPool or submitting a request
-    event NewRequestOnDeck(uint256 indexed _requestId, string _query, bytes32 _onDeckQueryHash, uint256 _onDeckTotalTips);
+    event NewRequestOnDeck(uint256 indexed _requestId, uint256 _onDeckTotalTips);
     //Emits upon a successful Mine, indicates the blocktime at point of the mine and the value mined
     event NewValue(uint256 indexed _requestId, uint256 _time, uint256 _value, uint256 _totalTips, bytes32 _currentChallenge);
     //Emits upon each mine (5 total) and shows the miner, nonce, and value submitted
@@ -157,7 +155,7 @@ contract Tellor is TellorGetters{
                     self.missedCalls[temp3]++;
                     reselectNewValidators();
                     if (self.missedCalls[temp3] == 3){
-                        doTransfer(temp3, self.addressVars[keccak256("_owner")], 1e18);
+                        doTransfer(temp3, self.addressVars[keccak256("_deity")], 1e18);//we need to think about this
                     }
                 }
            }
@@ -219,14 +217,10 @@ contract Tellor is TellorGetters{
                 self.currentChallenge,
                 _topId,
                 self.uintVars[keccak256("difficulty")],
-                self.requestDetails[_topId].apiUintVars[keccak256("granularity")],
-                self.requestDetails[_topId].queryString,
                 self.uintVars[keccak256("currentTotalTips")]
             );
             emit NewRequestOnDeck(
                 newRequestId,
-                self.requestDetails[newRequestId].queryString,
-                self.requestDetails[newRequestId].queryHash,
                 self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")]
             );
         } else {
@@ -472,26 +466,6 @@ contract Tellor is TellorGetters{
                 }
             }
     }
-    /**
-    * @dev Allows the current owner to propose transfer control of the contract to a
-    * newOwner and the ownership is pending until the new owner calls the claimOwnership
-    * function
-    * @param _pendingOwner The address to transfer ownership to.
-    */
-    function proposeOwnership(address payable _pendingOwner) external {
-        require(msg.sender == self.addressVars[keccak256("_owner")], "Sender is not owner");
-        emit OwnershipProposed(self.addressVars[keccak256("_owner")], _pendingOwner);
-        self.addressVars[keccak256("pending_owner")] = _pendingOwner;
-    }
-
-    /**
-    * @dev Allows the new owner to claim control of the contract
-    */
-    function claimOwnership() external {
-        require(msg.sender == self.addressVars[keccak256("pending_owner")], "Sender is not pending owner");
-        emit OwnershipTransferred(self.addressVars[keccak256("_owner")], self.addressVars[keccak256("pending_owner")]);
-        self.addressVars[keccak256("_owner")] = self.addressVars[keccak256("pending_owner")];
-    }
 
     /**
     * @dev This function allows miners to deposit their stake.
@@ -611,27 +585,6 @@ contract Tellor is TellorGetters{
         return true;
     }
 
-    /**
-    * @dev Allows users to access the token's name
-    */
-    function name() external pure returns (string memory) {
-        return "Tellor Tributes";
-    }
-
-    /**
-    * @dev Allows users to access the token's symbol
-    */
-    function symbol() external pure returns (string memory) {
-        return "TRB";
-    }
-
-    /**
-    * @dev Allows users to access the number of decimals
-    */
-    function decimals() external pure returns (uint8) {
-        return 18;
-    }
-
         /**
     * @dev This function updates APIonQ and the requestQ when requestData or addTip are ran
     * @param _requestId being requested
@@ -659,8 +612,6 @@ contract Tellor is TellorGetters{
                 self.currentChallenge,
                 self.uintVars[keccak256("currentRequestId")],
                 self.uintVars[keccak256("difficulty")],
-                self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("granularity")],
-                self.requestDetails[self.uintVars[keccak256("currentRequestId")]].queryString,
                 self.uintVars[keccak256("currentTotalTips")]
             );
         } else {
@@ -669,7 +620,7 @@ contract Tellor is TellorGetters{
             //is being currently mined)
             if (_payout > self.requestDetails[onDeckRequestId].apiUintVars[keccak256("totalTip")] || (onDeckRequestId == 0)) {
                 //let everyone know the next on queue has been replaced
-                emit NewRequestOnDeck(_requestId, _request.queryString, _request.queryHash, _payout);
+                emit NewRequestOnDeck(_requestId, _payout);
             }
 
             //if the request is not part of the requestQ[51] array
@@ -742,7 +693,7 @@ contract Tellor is TellorGetters{
     * @dev this function allows the dispute fee to fluctuate based on the number of miners on the system.
     * The floor for the fee is 15e18.
     */
-    function updateDisputeFee(uint disputeId) public {
+    function updateDisputeFee(uint disputeId) internal {
         self.disputesById[disputeId].disputeUintVars[keccak256("DisputeRound")]++;
         //if the number of staked miners divided by the target count of staked miners is less than 1
         if ((self.uintVars[keccak256("stakerCount")] * 1000) / self.uintVars[keccak256("targetMiners")] < 1000) {

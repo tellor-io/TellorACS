@@ -173,13 +173,11 @@ contract TellorGetters {
     * @dev Getter function for variables for the requestId being currently mined(currentRequestId)
     * @return current challenge, curretnRequestId, level of difficulty, api/query string, and granularity(number of decimals requested), total tip for the request
     */
-    function getCurrentVariables() external view returns (bytes32, uint256, uint256, string memory, uint256, uint256) {
+    function getCurrentVariables() external view returns (bytes32, uint256, uint256, uint256) {
                return (
             self.currentChallenge,
             self.uintVars[keccak256("currentRequestId")],
             self.uintVars[keccak256("difficulty")],
-            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].queryString,
-            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("granularity")],
             self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("totalTip")]
         );
     }
@@ -203,19 +201,6 @@ contract TellorGetters {
     */
     function getDisputeUintVars(uint256 _disputeId, bytes32 _data) external view returns (uint256) {
         return self.disputesById[_disputeId].disputeUintVars[_data];
-    }
-
-    /**
-    * @dev Gets the a value for the latest timestamp available
-    * @return value for timestamp of last proof of work submited
-    * @return true if the is a timestamp for the lastNewValue
-    */
-    function getLastNewValue() external view returns (uint256, bool) {
-        return (retrieveData(self.requestIdByTimestamp[self.uintVars[keccak256("timeOfLastNewValue")]],
-                self.uintVars[keccak256("timeOfLastNewValue")]
-            ),
-            true
-        );
     }
 
     /**
@@ -314,13 +299,9 @@ contract TellorGetters {
     * @return uint of index in requestQ array
     * @return uint of current payout/tip for this requestId
     */
-    function getRequestVars(uint256 _requestId) external view returns (string memory, string memory, bytes32, uint256, uint256, uint256) {
+    function getRequestVars(uint256 _requestId) external view returns (uint256, uint256) {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         return (
-            _request.queryString,
-            _request.dataSymbol,
-            _request.queryHash,
-            _request.apiUintVars[keccak256("granularity")],
             _request.apiUintVars[keccak256("requestQPosition")],
             _request.apiUintVars[keccak256("totalTip")]
         );
@@ -369,20 +350,7 @@ contract TellorGetters {
         return self.uintVars[_data];
     }
 
-    /**
-    * @dev Getter function for next requestId on queue/request with highest payout at time the function is called
-    * @return onDeck/info on request with highest payout-- RequestId, Totaltips, and API query string
-    */
-    function getVariablesOnDeck() external view returns (uint256, uint256, string memory) {
-        uint256 newRequestId = getTopRequestID();
-        return (
-            newRequestId,
-            self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")],
-            self.requestDetails[newRequestId].queryString
-        );
-    }
-
-        /**
+   /**
     * @dev Getter function for the request with highest payout. This function is used within the getVariablesOnDeck function
     * @return uint _requestId of request with highest payout at the time the function is called
     */
@@ -419,6 +387,28 @@ contract TellorGetters {
     */
     function totalSupply() external view returns (uint256) {
         return self.uintVars[keccak256("total_supply")];
+    }
+
+
+    /**
+    * @dev Allows users to access the token's name
+    */
+    function name() external pure returns (string memory) {
+        return "Tellor Tributes";
+    }
+
+    /**
+    * @dev Allows users to access the token's symbol
+    */
+    function symbol() external pure returns (string memory) {
+        return "TRB";
+    }
+
+    /**
+    * @dev Allows users to access the number of decimals
+    */
+    function decimals() external pure returns (uint8) {
+        return 18;
     }
 
 }

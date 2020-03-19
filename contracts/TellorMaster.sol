@@ -24,7 +24,6 @@ contract TellorMaster{
         self.uintVars[keccak256("stakeAmount")] = 10e18;
         self.uintVars[keccak256("disputeFee")] = 10e18;
         self.uintVars[keccak256("minimumStake")] = 500e18;
-        self.addressVars[keccak256("_owner")] = msg.sender;
         self.addressVars[keccak256("_deity")] = msg.sender;
         self.addressVars[keccak256("tellorContract")] = _tellorContract;
         emit NewTellorAddress(_tellorContract);
