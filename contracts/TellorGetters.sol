@@ -21,44 +21,6 @@ contract TellorGetters {
     TellorStorage.TellorStorageStruct tellor;
 
     /**
-    * @param _user address
-    * @param _spender address
-    * @return Returns the remaining allowance of tokens granted to the _spender from the _user
-    */
-    function allowance(address _user, address _spender) external view returns (uint256) {
-        return tellor.allowance(_user, _spender);
-    }
-
-    /**
-    * @dev This function returns whether or not a given user is allowed to trade a given amount
-    * @param _user address
-    * @param _amount uint of amount
-    * @return true if the user is alloed to trade the amount specified
-    */
-    function allowedToTrade(address _user, uint256 _amount) external view returns (bool) {
-        return tellor.allowedToTrade(_user, _amount);
-    }
-
-    /**
-    * @dev Gets balance of owner specified
-    * @param _user is the owner address used to look up the balance
-    * @return Returns the balance associated with the passed in _user
-    */
-    function balanceOf(address _user) external view returns (uint256) {
-        return tellor.balanceOf(_user);
-    }
-
-    /**
-    * @dev Queries the balance of _user at a specific _blockNumber
-    * @param _user The address from which the balance will be retrieved
-    * @param _blockNumber The block number when the balance is queried
-    * @return The balance at _blockNumber
-    */
-    function balanceOfAt(address _user, uint256 _blockNumber) external view returns (uint256) {
-        return tellor.balanceOfAt(_user, _blockNumber);
-    }
-
-    /**
     * @dev This function tells you if a given challenge has been completed by a given miner
     * @param _challenge the challenge to search for
     * @param _miner address that you want to know if they solved the challenge
@@ -185,15 +147,8 @@ contract TellorGetters {
         return tellor.getMinersByRequestIdAndTimestamp(_requestId, _timestamp);
     }
 
-    /**
-    * @dev Get the name of the token
-    * return string of the token name
-    */
-    function getName() external view returns (string memory) {
-        return tellor.getName();
-    }
 
-    /**
+   /**
     * @dev Counts the number of values that have been submited for the request
     * if called for the currentRequest being mined it can tell you how many miners have submitted a value for that
     * request so far
@@ -220,15 +175,6 @@ contract TellorGetters {
     */
     function getRequestIdByTimestamp(uint256 _timestamp) external view returns (uint256) {
         return tellor.getRequestIdByTimestamp(_timestamp);
-    }
-
-    /**
-    * @dev Getter function for requestId based on the queryHash
-    * @param _request is the hash(of string api and granularity) to check if a request already exists
-    * @return uint requestId
-    */
-    function getRequestIdByQueryHash(bytes32 _request) external view returns (uint256) {
-        return tellor.getRequestIdByQueryHash(_request);
     }
 
     /**
@@ -321,7 +267,7 @@ contract TellorGetters {
     * @dev Getter function for next requestId on queue/request with highest payout at time the function is called
     * @return onDeck/info on request with highest payout-- RequestId, Totaltips, and API query string
     */
-    function getVariablesOnDeck() external view returns (uint256, uint256, string memory) {
+    function getVariablesOnDeck() external view returns (uint256, uint256) {
         return tellor.getVariablesOnDeck();
     }
 
@@ -343,14 +289,6 @@ contract TellorGetters {
     */
     function retrieveData(uint256 _requestId, uint256 _timestamp) external view returns (uint256) {
         return tellor.retrieveData(_requestId, _timestamp);
-    }
-
-    /**
-    * @dev Getter for the total_supply of oracle tokens
-    * @return uint total supply
-    */
-    function totalSupply() external view returns (uint256) {
-        return tellor.totalSupply();
     }
 
 }

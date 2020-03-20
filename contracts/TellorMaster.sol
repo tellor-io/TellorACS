@@ -16,11 +16,12 @@ contract TellorMaster is TellorGetters {
     * account, the tellor contract to the Tellor master address and owner to the Tellor master owner address
     * @param _tellorContract is the address for the tellor contract
     */
-    constructor(address _tellorContract) public {
+    constructor(address _tellorContract, address _tellorToken) public {
         tellor.init();
         tellor.addressVars[keccak256("_owner")] = msg.sender;
         tellor.addressVars[keccak256("_deity")] = msg.sender;
         tellor.addressVars[keccak256("tellorContract")] = _tellorContract;
+        tellor.addressVars[keccak256("tellorToken")] = tellorToken;
         emit NewTellorAddress(_tellorContract);
     }
 
@@ -40,6 +41,10 @@ contract TellorMaster is TellorGetters {
     */
     function changeTellorContract(address _tellorContract) external {
         tellor.changeTellorContract(_tellorContract);
+    }
+
+    function changeTellorToken(address _newToken) external{
+        tellor.changeTellorToken(_newToken);
     }
 
     /**

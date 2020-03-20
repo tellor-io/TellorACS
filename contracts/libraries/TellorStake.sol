@@ -26,9 +26,8 @@ library TellorStake {
         //set Constants
         self.uintVars[keccak256("decimals")] = 18;
         self.uintVars[keccak256("targetMiners")] = 200;
-        self.uintVars[keccak256("stakeAmount")] = 10e18;
         self.uintVars[keccak256("disputeFee")] = 10e18;
-        self.uintVars[keccak256("minimumStake")] = 500e18;
+        self.uintVars[keccak256("minimumStake")] = 100e18;
     }
 
     /**
@@ -42,7 +41,7 @@ library TellorStake {
         //Require that the miner is staked
         require(stakes.currentStatus == 1, "Miner is not staked");
         require(_amount % minimumStake == 0, "Must be divisible by minimumStake");
-        require(_amount < stakes.amountStaked);
+        require(_amount <= stakes.amountStaked);
         
         
         for(uint i=0; i <= _amount / minimumStake; i++) {
@@ -93,7 +92,7 @@ library TellorStake {
         }
         uint minimumStake = self.uintVars[keccak256("minimumStake")];
         require(_amount > minimumStake, "You must stake a certain amount");
-        require(_amount % minimumStake == 0, "Must be divisible by minimumStake");
+        require(_amount % self.uintVars[keccak256("minimumStake")] == 0, "Must be divisible by minimumStake");
         for(uint i=0; i <= _amount / minimumStake; i++){
             self.stakerDetails[msg.sender].stakePosition.push(self.stakers.length);
             self.stakerDetails[msg.sender].stakePositionArrayIndex[self.stakers.length] = i;

@@ -13,6 +13,7 @@ library TellorGettersLibrary {
     using SafeMath for uint256;
 
     event NewTellorAddress(address _newTellor); //emmited when a proposed fork is voted true
+    event NewTellorToken(address _newToken);
 
     /*Functions*/
 
@@ -36,6 +37,12 @@ library TellorGettersLibrary {
         require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
         self.addressVars[keccak256("tellorContract")] = _tellorContract;
         emit NewTellorAddress(_tellorContract);
+    }
+
+    function changeTellorToken(TellorStorage.TellorStorageStruct storage self, address _newToken)internal{
+                require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
+        self.addressVars[keccak256("tellorToken")] = _newToken;
+        emit NewTellorToken(_newToken);
     }
 
     /*Tellor Getters*/
@@ -134,8 +141,6 @@ library TellorGettersLibrary {
             self.currentChallenge,
             self.uintVars[keccak256("currentRequestId")],
             self.uintVars[keccak256("difficulty")],
-            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].queryString,
-            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("granularity")],
             self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("totalTip")]
         );
     }
@@ -224,14 +229,6 @@ library TellorGettersLibrary {
     }
 
     /**
-    * @dev Get the name of the token
-    * @return string of the token name
-    */
-    function getName(TellorStorage.TellorStorageStruct storage self) internal pure returns (string memory) {
-        return "Tellor Tributes";
-    }
-
-    /**
     * @dev Counts the number of values that have been submited for the request
     * if called for the currentRequest being mined it can tell you how many miners have submitted a value for that
     * request so far
@@ -259,15 +256,6 @@ library TellorGettersLibrary {
     */
     function getRequestIdByTimestamp(TellorStorage.TellorStorageStruct storage self, uint256 _timestamp) internal view returns (uint256) {
         return self.requestIdByTimestamp[_timestamp];
-    }
-
-    /**
-    * @dev Getter function for requestId based on the qeuaryHash
-    * @param _queryHash hash(of string api and granularity) to check if a request already exists
-    * @return uint requestId
-    */
-    function getRequestIdByQueryHash(TellorStorage.TellorStorageStruct storage self, bytes32 _queryHash) internal view returns (uint256) {
-        return self.requestIdByQueryHash[_queryHash];
     }
 
     /**
@@ -308,14 +296,10 @@ library TellorGettersLibrary {
     function getRequestVars(TellorStorage.TellorStorageStruct storage self, uint256 _requestId)
         internal
         view
-        returns (string memory, string memory, bytes32, uint256, uint256, uint256)
+        returns (uint256, uint256)
     {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         return (
-            _request.queryString,
-            _request.dataSymbol,
-            _request.queryHash,
-            _request.apiUintVars[keccak256("granularity")],
             _request.apiUintVars[keccak256("requestQPosition")],
             _request.apiUintVars[keccak256("totalTip")]
         );
@@ -343,14 +327,6 @@ library TellorGettersLibrary {
         returns (uint256[5] memory)
     {
         return self.requestDetails[_requestId].valuesByTimestamp[_timestamp];
-    }
-
-    /**
-    * @dev Get the symbol of the token
-    * @return string of the token symbol
-    */
-    function getSymbol(TellorStorage.TellorStorageStruct storage self) internal pure returns (string memory) {
-        return "TT";
     }
 
     /**
@@ -427,13 +403,4 @@ library TellorGettersLibrary {
     {
         return self.requestDetails[_requestId].finalValues[_timestamp];
     }
-
-    /**
-    * @dev Getter for the total_supply of oracle tokens
-    * @return uint total supply
-    */
-    function totalSupply(TellorStorage.TellorStorageStruct storage self) internal view returns (uint256) {
-        return self.uintVars[keccak256("total_supply")];
-    }
-
 }

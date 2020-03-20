@@ -19,7 +19,6 @@ library TellorDispute {
     event Voted(uint256 indexed _disputeID, bool _position, address indexed _voter);
     //emitted upon dispute tally
     event DisputeVoteTallied(uint256 indexed _disputeID, int256 _result, address indexed _reportedMiner, address _reportingParty, bool _active);
-    event NewTellorAddress(address _newTellor); //emmited when a proposed fork is voted true
 
     /*Functions*/
 
@@ -142,9 +141,6 @@ library TellorDispute {
 
         //Ensure the time for voting has elapsed
         require(now > disp.disputeUintVars[keccak256("minExecutionDate")], "Time for voting haven't elapsed");
-
-        //If the vote is not a proposed fork
-        if (disp.isPropFork == false) {
             TellorStorage.StakeInfo storage stakes = self.stakerDetails[disp.reportedMiner];
             //If the vote for disputing a value is succesful(disp.tally >0) then unstake the reported
             // miner and transfer the stakeAmount and dispute fee to the reporting party
@@ -172,19 +168,6 @@ library TellorDispute {
                     _request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] = false;
                 }
             }
-            //If the vote is for a proposed fork require a 20% quorum before executing the update to the new tellor contract address
-        } else {
-            if (disp.tally > 0) {
-                require(
-                    disp.disputeUintVars[keccak256("quorum")] > ((self.uintVars[keccak256("total_supply")] * 20) / 100),
-                    "Quorum is not reached"
-                );
-                self.addressVars[keccak256("tellorContract")] = disp.proposedForkAddress;
-                disp.disputeVotePassed = true;
-                emit NewTellorAddress(disp.proposedForkAddress);
-            }
-        }
-
         //update the dispute status to executed
         disp.executed = true;
         emit DisputeVoteTallied(_disputeId, disp.tally, disp.reportedMiner, disp.reportingParty, disp.disputeVotePassed);
@@ -221,34 +204,7 @@ library TellorDispute {
     }
 
 
-    /**
-    * @dev Allows for a fork to be proposed
-    * @param _propNewTellorAddress address for new proposed Tellor
-    */
-    function proposeFork(TellorStorage.TellorStorageStruct storage self, address _propNewTellorAddress) public {
-        bytes32 _hash = keccak256(abi.encodePacked(_propNewTellorAddress));
-        require(self.disputeIdByDisputeHash[_hash] == 0, "");
-        TellorTransfer.doTransfer(self, msg.sender, address(this), self.uintVars[keccak256("disputeFee")]); //This is the fork fee
-        self.uintVars[keccak256("disputeCount")]++;
-        uint256 disputeId = self.uintVars[keccak256("disputeCount")];
-        self.disputeIdByDisputeHash[_hash] = disputeId;
-        self.disputesById[disputeId] = TellorStorage.Dispute({
-            hash: _hash,
-            isPropFork: true,
-            reportedMiner: msg.sender,
-            reportingParty: msg.sender,
-            proposedForkAddress: _propNewTellorAddress,
-            executed: false,
-            disputeVotePassed: false,
-            tally: 0
-        });
-        self.disputesById[disputeId].disputeUintVars[keccak256("blockNumber")] = block.number;
-        self.disputesById[disputeId].disputeUintVars[keccak256("fee")] = self.uintVars[keccak256("disputeFee")];
-        self.disputesById[disputeId].disputeUintVars[keccak256("minExecutionDate")] = now + 7 days;
-    }
-
-
-    /**
+   /**
     * @dev this function allows the dispute fee to fluctuate based on the number of miners on the system.
     * The floor for the fee is 15e18.
     */
@@ -277,17 +233,8 @@ library TellorDispute {
            self.disputesById[disputeId].disputeUintVars[keccak256("fee")] * self.disputesById[disputeId].disputeUintVars[keccak256("DisputeRound")] * 2;
         }
 
-TellorStorage.Dispute storage disp = self.disputesById[disputeId];
-//If the vote is not a proposed fork
-        if (disp.isPropFork == false) {
+        TellorStorage.Dispute storage disp = self.disputesById[disputeId];
         self.disputesById[disputeId].disputeUintVars[keccak256("DisputeLock")] == now + 1 days;
-        }else {
-        self.disputesById[disputeId].disputeUintVars[keccak256("DisputeLock")] == now + 7 days;
-        }
-        
     }
-
-
-
 
 }   
