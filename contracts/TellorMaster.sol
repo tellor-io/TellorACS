@@ -18,10 +18,9 @@ contract TellorMaster is TellorGetters {
     */
     constructor(address _tellorContract, address _tellorToken) public {
         tellor.init();
-        tellor.addressVars[keccak256("_owner")] = msg.sender;
         tellor.addressVars[keccak256("_deity")] = msg.sender;
         tellor.addressVars[keccak256("tellorContract")] = _tellorContract;
-        tellor.addressVars[keccak256("tellorToken")] = tellorToken;
+        tellor.addressVars[keccak256("tellorToken")] = _tellorToken;
         emit NewTellorAddress(_tellorContract);
     }
 

@@ -12,7 +12,14 @@ library TellorTransfer {
     using SafeMath for uint256;
 
     /*Functions*/
-
+    /**
+    * @dev Gets balance of owner specified
+    * @param _user is the owner address used to look up the balance
+    * @return Returns the balance associated with the passed in _user
+    */
+    function balanceOf(TellorStorage.TellorStorageStruct storage self, address _user) public view returns (uint256) {
+        return balanceOfAt(self, _user, block.number);
+    }
     /**
     * @dev Completes POWO transfers by updating the balances on the current block number
     * @param _from address to transfer from
@@ -29,7 +36,6 @@ library TellorTransfer {
         previousBalance = balanceOfAt(self, _to, block.number);
         require(previousBalance + _amount >= previousBalance, "Overflow happened"); // Check for overflow
         updateBalanceAtNow(self.balances[_to], previousBalance + _amount);
-        emit Transfer(_from, _to, _amount);
     }
 
     /**

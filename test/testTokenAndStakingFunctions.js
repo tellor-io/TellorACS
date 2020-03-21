@@ -8,14 +8,10 @@ const BN = require('bn.js');
 const helper = require("./helpers/test_helpers");
 const TellorMaster = artifacts.require("./TellorMaster.sol");
 const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
-var OldTellor = artifacts.require("./oldContracts/OldTellor.sol")
 var oracleAbi = Tellor.abi;
 var tellorAbi = TellorMaster.abi;
 var masterAbi = TellorMaster.abi;
 var oracleByte = Tellor.bytecode;
-var api = 'json(https://api.gdax.com/products/BTC-USD/ticker).price';
-var api2 = 'json(https://api.gdax.com/products/ETH-USD/ticker).price';
-
 
 contract('Token and Staking Tests', function(accounts) {
   let oracle;

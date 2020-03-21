@@ -58,10 +58,8 @@ library TellorDispute {
         //maps the dispute to the Dispute struct
         self.disputesById[disputeId] = TellorStorage.Dispute({
             hash: _hash,
-            isPropFork: false,
             reportedMiner: _miner,
             reportingParty: msg.sender,
-            proposedForkAddress: address(0),
             executed: false,
             disputeVotePassed: false,
             tally: 0

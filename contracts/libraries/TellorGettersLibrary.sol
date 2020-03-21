@@ -84,7 +84,6 @@ library TellorGettersLibrary {
     * @return bytes32 hash of dispute
     * @return bool executed where true if it has been voted on
     * @return bool disputeVotePassed
-    * @return bool isPropFork true if the dispute is a proposed fork
     * @return address of reportedMiner
     * @return address of reportingParty
     * @return address of proposedForkAddress
@@ -102,17 +101,15 @@ library TellorGettersLibrary {
     function getAllDisputeVars(TellorStorage.TellorStorageStruct storage self, uint256 _disputeId)
         internal
         view
-        returns (bytes32, bool, bool, bool, address, address, address, uint256[9] memory, int256)
+        returns (bytes32, bool, bool, address, address, uint256[9] memory, int256)
     {
         TellorStorage.Dispute storage disp = self.disputesById[_disputeId];
         return (
             disp.hash,
             disp.executed,
             disp.disputeVotePassed,
-            disp.isPropFork,
             disp.reportedMiner,
             disp.reportingParty,
-            disp.proposedForkAddress,
             [
                 disp.disputeUintVars[keccak256("requestId")],
                 disp.disputeUintVars[keccak256("timestamp")],
@@ -135,7 +132,7 @@ library TellorGettersLibrary {
     function getCurrentVariables(TellorStorage.TellorStorageStruct storage self)
         internal
         view
-        returns (bytes32, uint256, uint256, string memory, uint256, uint256)
+        returns (bytes32, uint256, uint256, uint256)
     {
         return (
             self.currentChallenge,
@@ -286,10 +283,6 @@ library TellorGettersLibrary {
     /**
     * @dev Gets the API struct variables that are not mappings
     * @param _requestId to look up
-    * @return string of api to query
-    * @return string of symbol of api to query
-    * @return bytes32 hash of string
-    * @return bytes32 of the granularity(decimal places) requested
     * @return uint of index in requestQ array
     * @return uint of current payout/tip for this requestId
     */
@@ -358,14 +351,13 @@ library TellorGettersLibrary {
 
     /**
     * @dev Getter function for next requestId on queue/request with highest payout at time the function is called
-    * @return onDeck/info on request with highest payout-- RequestId, Totaltips, and API query string
+    * @return onDeck/info on request with highest payout-- RequestId, Totaltips
     */
-    function getVariablesOnDeck(TellorStorage.TellorStorageStruct storage self) internal view returns (uint256, uint256, string memory) {
+    function getVariablesOnDeck(TellorStorage.TellorStorageStruct storage self) internal view returns (uint256, uint256) {
         uint256 newRequestId = getTopRequestID(self);
         return (
             newRequestId,
-            self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")],
-            self.requestDetails[newRequestId].queryString
+            self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")]
         );
     }
 

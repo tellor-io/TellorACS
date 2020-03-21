@@ -49,7 +49,7 @@ library TellorLibrary {
     */
     function addTip(TellorStorage.TellorStorageStruct storage self, uint256 _requestId, uint256 _tip) public {
         require(_requestId > 0, "RequestId is 0");
-        TellorInterface tellorToken = TellorInterface(self.addressVars("tellorToken"));
+        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
         require(tellorToken.allowance(msg.sender,address(this)) >= _tip);
 
@@ -71,7 +71,7 @@ library TellorLibrary {
     */
     function newBlock(TellorStorage.TellorStorageStruct storage self, string memory _nonce, uint256 _requestId) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
-        TellorInterface tellorToken = TellorInterface(self.addressVars("tellorToken"));
+        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
         selectNewValidators(self,true);
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
@@ -103,7 +103,7 @@ library TellorLibrary {
                     self.missedCalls[temp3]++;
                     reselectNewValidators(self);
                     if (self.missedCalls[temp3] == 5){
-                        requestStakingWithdraw(temp3);//add a way to get these?  Who does it go to?
+                        TellorStake.requestStakingWithdrawInternal(self,temp3,TellorTransfer.balanceOf(self,temp3));
                     }
                 }
            }
@@ -165,14 +165,10 @@ library TellorLibrary {
                 self.currentChallenge,
                 _topId,
                 self.uintVars[keccak256("difficulty")],
-                self.requestDetails[_topId].apiUintVars[keccak256("granularity")],
-                self.requestDetails[_topId].queryString,
                 self.uintVars[keccak256("currentTotalTips")]
             );
             emit NewRequestOnDeck(
                 newRequestId,
-                self.requestDetails[newRequestId].queryString,
-                self.requestDetails[newRequestId].queryHash,
                 self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")]
             );
         } else {

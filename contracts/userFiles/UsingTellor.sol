@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 
 import "../TellorMaster.sol";
 import "../Tellor.sol";
+import "../interfaces/TokenInterface.sol";
 import "./UserContract.sol";
 import "../interfaces/ADOInterface.sol";
 /**
@@ -70,41 +71,14 @@ contract UsingTellor is ADOInterface{
     }
 
     /**
-    * @dev Allows the user to submit a request for data to the oracle using Tributes
-    * Allowing this prevents us from increasing spread too high (since if we set the price too hight
-    * users will just go to an exchange and get tokens from there)
-    * @param _request string API being requested to be mined
-    * @param _symbol is the short string symbol for the api request
-    * @param _granularity is the number of decimals miners should include on the submitted value
-    * @param _tip amount the requester is willing to pay to be get on queue. Miners
-    * mine the onDeckQueryHash, or the api with the highest payout pool
-    */
-    function requestData(string calldata _request, string calldata _symbol, uint256 _granularity, uint256 _tip) external {
-        Tellor _tellor = Tellor(tellorUserContract.tellorStorageAddress());
-        if (_tip > 0) {
-            require(_tellor.transferFrom(msg.sender, address(this), _tip), "Transfer failed");
-        }
-        _tellor.requestData(_request, _symbol, _granularity, _tip);
-    }
-
-    /**
-    * @dev Allows the user to submit a request for data to the oracle using ETH
-    * @param _request string API being requested to be mined
-    * @param _symbol is the short string symbol for the api request
-    * @param _granularity is the number of decimals miners should include on the submitted value
-    */
-    function requestDataWithEther(string calldata _request, string calldata _symbol, uint256 _granularity) external payable {
-        tellorUserContract.requestDataWithEther.value(msg.value)(_request, _symbol, _granularity);
-    }
-
-    /**
     * @dev Allows the user to tip miners for the specified request using Tributes
     * @param _requestId to tip
     * @param _tip amount
     */
     function addTip(uint256 _requestId, uint256 _tip) public {
         Tellor _tellor = Tellor(tellorUserContract.tellorStorageAddress());
-        require(_tellor.transferFrom(msg.sender, address(this), _tip), "Transfer failed");
+        TokenInterface _token = TokenInterface(tellorUserContract.token());
+        require(_token.transferFrom(msg.sender, address(this), _tip), "Transfer failed");
         _tellor.addTip(_requestId, _tip);
     }
 

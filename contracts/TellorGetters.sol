@@ -57,10 +57,8 @@ contract TellorGetters {
     * @return bytes32 hash of dispute
     * @return bool executed where true if it has been voted on
     * @return bool disputeVotePassed
-    * @return bool isPropFork true if the dispute is a proposed fork
     * @return address of reportedMiner
     * @return address of reportingParty
-    * @return address of proposedForkAddress
     * @return uint of requestId
     * @return uint of timestamp
     * @return uint of value
@@ -75,16 +73,16 @@ contract TellorGetters {
     function getAllDisputeVars(uint256 _disputeId)
         public
         view
-        returns (bytes32, bool, bool, bool, address, address, address, uint256[9] memory, int256)
+        returns (bytes32, bool, bool, address, address, uint256[9] memory, int256)
     {
         return tellor.getAllDisputeVars(_disputeId);
     }
 
     /**
     * @dev Getter function for variables for the requestId being currently mined(currentRequestId)
-    * @return current challenge, curretnRequestId, level of difficulty, api/query string, and granularity(number of decimals requested), total tip for the request
+    * @return current challenge, curretnRequestId, level of difficulty, total tip for the request
     */
-    function getCurrentVariables() external view returns (bytes32, uint256, uint256, string memory, uint256, uint256) {
+    function getCurrentVariables() external view returns (bytes32, uint256, uint256, uint256) {
         return tellor.getCurrentVariables();
     }
 
@@ -201,14 +199,10 @@ contract TellorGetters {
     /**
     * @dev Gets the API struct variables that are not mappings
     * @param _requestId to look up
-    * @return string of api to query
-    * @return string of symbol of api to query
-    * @return bytes32 hash of string
-    * @return bytes32 of the granularity(decimal places) requested
     * @return uint of index in requestQ array
     * @return uint of current payout/tip for this requestId
     */
-    function getRequestVars(uint256 _requestId) external view returns (string memory, string memory, bytes32, uint256, uint256, uint256) {
+    function getRequestVars(uint256 _requestId) external view returns (uint256, uint256) {
         return tellor.getRequestVars(_requestId);
     }
 
@@ -230,14 +224,6 @@ contract TellorGetters {
     */
     function getSubmissionsByTimestamp(uint256 _requestId, uint256 _timestamp) external view returns (uint256[5] memory) {
         return tellor.getSubmissionsByTimestamp(_requestId, _timestamp);
-    }
-
-    /**
-    * @dev Get the symbol of the token
-    * return string of the token symbol
-    */
-    function getSymbol() external view returns (string memory) {
-        return tellor.getSymbol();
     }
 
     /**
