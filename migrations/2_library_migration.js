@@ -5,6 +5,7 @@ var TellorStake = artifacts.require("./libraries/TellorStake.sol");
 var TellorLibrary = artifacts.require("./libraries/TellorLibrary.sol");
 var TellorGettersLibrary = artifacts.require("./libraries/TellorGettersLibrary.sol");
 var Tellor = artifacts.require("./Tellor.sol");
+var ERC20 = artifacts.require("./ERC20.sol");
 var TellorMaster = artifacts.require("./TellorMaster.sol");
 /****Uncomment the body to run this with Truffle migrate for truffle testing*/
 
@@ -31,6 +32,7 @@ var TellorMaster = artifacts.require("./TellorMaster.sol");
 
 module.exports = async function (deployer) {
 
+  await deployer.deploy(ERC20);
   // deploy transfer
   await deployer.deploy(TellorTransfer);
  // sleep_s(30);
@@ -70,10 +72,9 @@ module.exports = async function (deployer) {
   await deployer.link(TellorGettersLibrary,TellorMaster);
   await deployer.link(TellorStake,TellorMaster);
   await deployer.deploy(Tellor).then(async function() {
-    await deployer.deploy(TellorMaster, Tellor.address)
+    await deployer.deploy(TellorMaster, Tellor.address, ERC20.address)
   });
 
 
 
 };
-/****Uncomment the body to run this with Truffle migrate for truffle testing*/
