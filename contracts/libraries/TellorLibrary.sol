@@ -328,10 +328,9 @@ library TellorLibrary {
     * @param _reset true if validators need to be selected
     */
     function selectNewValidators(TellorStorage.TellorStorageStruct storage self, bool _reset) internal{
-        // if(_reset):
-        //     selectedValidators.length = 0
-        require(_reset==true);
-        self.selectedValidators.length = 0;
+        if(_reset){
+            self.selectedValidators.length = 0;
+        }
         uint j=0;
         uint i=0;
         address potentialValidator;

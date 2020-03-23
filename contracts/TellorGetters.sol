@@ -30,6 +30,10 @@ contract TellorGetters {
         return tellor.didMine(_challenge, _miner);
     }
 
+
+    function getCurrentMiners() external returns(address[] memory miners){
+        return tellor.getCurrentMiners();
+    }
     /**
     * @dev Checks if an address voted in a given dispute
     * @param _disputeId to look up

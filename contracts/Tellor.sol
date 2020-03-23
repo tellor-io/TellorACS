@@ -86,6 +86,10 @@ contract Tellor {
         tellor.depositStake(_amount);
     }
 
+
+    function reselectNewValidators() external{
+        tellor.reselectNewValidators();
+    }
     /**
     * @dev This function allows stakers to request to withdraw their stake (no longer stake)
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they

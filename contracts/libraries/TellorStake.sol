@@ -92,7 +92,7 @@ library TellorStake {
     function depositStake(TellorStorage.TellorStorageStruct storage self, uint _amount) public {
        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
-        require(tellorToken.balanceOf(msg.sender) >= _amount + TellorTransfer.balanceOf(self,msg.sender), "Balance is lower than stake amount");
+        require(tellorToken.balanceOf(msg.sender) >= _amount, "Balance is lower than stake amount");
         require(tellorToken.allowance(msg.sender,address(this)) >= _amount, "Proper amount must be allowed to this contract");
         tellorToken.transferFrom(msg.sender, address(this), _amount);
         //Ensure they can only stake if they are not currrently staked or if their stake time frame has ended

@@ -28,6 +28,10 @@ library TellorGettersLibrary {
         self.addressVars[keccak256("_deity")] = _newDeity;
     }
 
+    function getCurrentMiners(TellorStorage.TellorStorageStruct storage self) internal returns(address[] memory miners){
+        return self.selectedValidators;
+    }
+
     //Only needs to be in library
     /**
     * @dev This function allows the deity to upgrade the Tellor System
