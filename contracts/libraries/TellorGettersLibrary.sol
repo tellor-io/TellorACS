@@ -304,8 +304,8 @@ library TellorGettersLibrary {
     * @return uint current state of staker
     * @return uint startDate of staking
     */
-    function getStakerInfo(TellorStorage.TellorStorageStruct storage self, address _staker) internal view returns (uint256, uint256) {
-        return (self.stakerDetails[_staker].currentStatus, self.stakerDetails[_staker].startDate);
+    function getStakerInfo(TellorStorage.TellorStorageStruct storage self, address _staker) internal view returns (uint256, uint256,uint256) {
+        return (self.stakerDetails[_staker].currentStatus, self.stakerDetails[_staker].startDate, self.stakerDetails[_staker].stakePosition.length);
     }
 
     /**

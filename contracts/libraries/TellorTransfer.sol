@@ -26,13 +26,15 @@ library TellorTransfer {
     * @param _to addres to transfer to
     * @param _amount to transfer
     */
-    function doTransfer(TellorStorage.TellorStorageStruct storage self, address _from, address _to, uint256 _amount) public {
+    function doTransfer(TellorStorage.TellorStorageStruct storage self, address _from, address _to, uint256 _amount) internal {
         require(_amount > 0, "Tried to send non-positive amount");
         require(_to != address(0), "Receiver is 0 address");
-        //allowedToTrade checks the stakeAmount is removed from balance if the _user is staked
-        require(allowedToTrade(self, _from, _amount), "Stake amount was not removed from balance");
-        uint256 previousBalance = balanceOfAt(self, _from, block.number);
-        updateBalanceAtNow(self.balances[_from], previousBalance - _amount);
+        uint256 previousBalance;
+        if(_from != address(this)){
+            require(balanceOf(self, _from).sub(_amount) >= 0, "Stake amount was not removed from balance");        
+            previousBalance = balanceOfAt(self, _from, block.number);
+            updateBalanceAtNow(self.balances[_from], previousBalance - _amount);
+        }
         previousBalance = balanceOfAt(self, _to, block.number);
         require(previousBalance + _amount >= previousBalance, "Overflow happened"); // Check for overflow
         updateBalanceAtNow(self.balances[_to], previousBalance + _amount);
@@ -74,25 +76,6 @@ library TellorTransfer {
             }
         }
         return checkpoints[min].value;
-    }
-
-    /**
-    * @dev This function returns whether or not a given user is allowed to trade a given amount
-    * and removing the staked amount from their balance if they are staked
-    * @param _user address of user
-    * @param _amount to check if the user can spend
-    * @return true if they are allowed to spend the amount being checked
-    */
-    function allowedToTrade(TellorStorage.TellorStorageStruct storage self, address _user, uint256 _amount) public view returns (bool) {
-        if (self.stakerDetails[_user].currentStatus > 0) {
-            //Removes the stakeAmount from balance if the _user is staked
-            if (balanceOf(self, _user).sub(self.uintVars[keccak256("stakeAmount")]).sub(_amount) >= 0) {
-                return true;
-            }
-        } else if (balanceOf(self, _user).sub(_amount) >= 0) {
-            return true;
-        }
-        return false;
     }
 
     /**

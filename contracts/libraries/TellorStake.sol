@@ -93,7 +93,7 @@ library TellorStake {
        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
         require(tellorToken.balanceOf(msg.sender) >= _amount + TellorTransfer.balanceOf(self,msg.sender), "Balance is lower than stake amount");
-        require(tellorToken.allowance(msg.sender,address(this)) >= _amount);
+        require(tellorToken.allowance(msg.sender,address(this)) >= _amount, "Proper amount must be allowed to this contract");
         tellorToken.transferFrom(msg.sender, address(this), _amount);
         //Ensure they can only stake if they are not currrently staked or if their stake time frame has ended
         //and they are currently locked for witdhraw
@@ -101,17 +101,16 @@ library TellorStake {
         if(TellorTransfer.balanceOf(self,msg.sender) == 0){
             self.uintVars[keccak256("stakerCount")] += 1;
         }
-        uint minimumStake = self.uintVars[keccak256("minimumStake")];
-        require(_amount > minimumStake, "You must stake a certain amount");
+        require(_amount >= self.uintVars[keccak256("minimumStake")], "You must stake a certain amount");
         require(_amount % self.uintVars[keccak256("minimumStake")] == 0, "Must be divisible by minimumStake");
-        for(uint i=0; i <= _amount / minimumStake; i++){
+        for(uint i=0; i < _amount / self.uintVars[keccak256("minimumStake")]; i++){
             self.stakerDetails[msg.sender].stakePosition.push(self.stakers.length);
             self.stakerDetails[msg.sender].stakePositionArrayIndex[self.stakers.length] = i;
             self.stakers.push(msg.sender);
         }
         self.stakerDetails[msg.sender].currentStatus = 1;
         self.stakerDetails[msg.sender].startDate = now - (now % 86400);
-        TellorTransfer.doTransfer(self,address(0),msg.sender,_amount);
+        TellorTransfer.doTransfer(self,address(this),msg.sender,_amount);
         //self.uniqueStakers += 1;
         self.uintVars[keccak256("uniqueStakers")] += 1;
         //self.totalStaked += _amount;

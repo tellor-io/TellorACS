@@ -212,7 +212,7 @@ contract TellorGetters {
     * @return uint current state of staker
     * @return uint startDate of staking
     */
-    function getStakerInfo(address _staker) external view returns (uint256, uint256) {
+    function getStakerInfo(address _staker) external view returns (uint256, uint256,uint256) {
         return tellor.getStakerInfo(_staker);
     }
 
