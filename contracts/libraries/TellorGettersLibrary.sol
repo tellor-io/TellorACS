@@ -13,6 +13,7 @@ library TellorGettersLibrary {
     using SafeMath for uint256;
 
     event NewTellorAddress(address _newTellor); //emmited when a proposed fork is voted true
+    event NewTellorToken(address _newToken);
 
     /*Functions*/
 
@@ -36,6 +37,12 @@ library TellorGettersLibrary {
         require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
         self.addressVars[keccak256("tellorContract")] = _tellorContract;
         emit NewTellorAddress(_tellorContract);
+    }
+
+    function changeTellorToken(TellorStorage.TellorStorageStruct storage self, address _newToken)internal{
+                require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
+        self.addressVars[keccak256("tellorToken")] = _newToken;
+        emit NewTellorToken(_newToken);
     }
 
     /*Tellor Getters*/
@@ -77,7 +84,6 @@ library TellorGettersLibrary {
     * @return bytes32 hash of dispute
     * @return bool executed where true if it has been voted on
     * @return bool disputeVotePassed
-    * @return bool isPropFork true if the dispute is a proposed fork
     * @return address of reportedMiner
     * @return address of reportingParty
     * @return address of proposedForkAddress
@@ -95,17 +101,15 @@ library TellorGettersLibrary {
     function getAllDisputeVars(TellorStorage.TellorStorageStruct storage self, uint256 _disputeId)
         internal
         view
-        returns (bytes32, bool, bool, bool, address, address, address, uint256[9] memory, int256)
+        returns (bytes32, bool, bool, address, address, uint256[9] memory, int256)
     {
         TellorStorage.Dispute storage disp = self.disputesById[_disputeId];
         return (
             disp.hash,
             disp.executed,
             disp.disputeVotePassed,
-            disp.isPropFork,
             disp.reportedMiner,
             disp.reportingParty,
-            disp.proposedForkAddress,
             [
                 disp.disputeUintVars[keccak256("requestId")],
                 disp.disputeUintVars[keccak256("timestamp")],
@@ -128,14 +132,12 @@ library TellorGettersLibrary {
     function getCurrentVariables(TellorStorage.TellorStorageStruct storage self)
         internal
         view
-        returns (bytes32, uint256, uint256, string memory, uint256, uint256)
+        returns (bytes32, uint256, uint256, uint256)
     {
         return (
             self.currentChallenge,
             self.uintVars[keccak256("currentRequestId")],
             self.uintVars[keccak256("difficulty")],
-            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].queryString,
-            self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("granularity")],
             self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("totalTip")]
         );
     }
@@ -224,14 +226,6 @@ library TellorGettersLibrary {
     }
 
     /**
-    * @dev Get the name of the token
-    * @return string of the token name
-    */
-    function getName(TellorStorage.TellorStorageStruct storage self) internal pure returns (string memory) {
-        return "Tellor Tributes";
-    }
-
-    /**
     * @dev Counts the number of values that have been submited for the request
     * if called for the currentRequest being mined it can tell you how many miners have submitted a value for that
     * request so far
@@ -262,15 +256,6 @@ library TellorGettersLibrary {
     }
 
     /**
-    * @dev Getter function for requestId based on the qeuaryHash
-    * @param _queryHash hash(of string api and granularity) to check if a request already exists
-    * @return uint requestId
-    */
-    function getRequestIdByQueryHash(TellorStorage.TellorStorageStruct storage self, bytes32 _queryHash) internal view returns (uint256) {
-        return self.requestIdByQueryHash[_queryHash];
-    }
-
-    /**
     * @dev Getter function for the requestQ array
     * @return the requestQ arrray
     */
@@ -298,24 +283,16 @@ library TellorGettersLibrary {
     /**
     * @dev Gets the API struct variables that are not mappings
     * @param _requestId to look up
-    * @return string of api to query
-    * @return string of symbol of api to query
-    * @return bytes32 hash of string
-    * @return bytes32 of the granularity(decimal places) requested
     * @return uint of index in requestQ array
     * @return uint of current payout/tip for this requestId
     */
     function getRequestVars(TellorStorage.TellorStorageStruct storage self, uint256 _requestId)
         internal
         view
-        returns (string memory, string memory, bytes32, uint256, uint256, uint256)
+        returns (uint256, uint256)
     {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         return (
-            _request.queryString,
-            _request.dataSymbol,
-            _request.queryHash,
-            _request.apiUintVars[keccak256("granularity")],
             _request.apiUintVars[keccak256("requestQPosition")],
             _request.apiUintVars[keccak256("totalTip")]
         );
@@ -327,8 +304,8 @@ library TellorGettersLibrary {
     * @return uint current state of staker
     * @return uint startDate of staking
     */
-    function getStakerInfo(TellorStorage.TellorStorageStruct storage self, address _staker) internal view returns (uint256, uint256) {
-        return (self.stakerDetails[_staker].currentStatus, self.stakerDetails[_staker].startDate);
+    function getStakerInfo(TellorStorage.TellorStorageStruct storage self, address _staker) internal view returns (uint256, uint256,uint256) {
+        return (self.stakerDetails[_staker].currentStatus, self.stakerDetails[_staker].startDate, self.stakerDetails[_staker].stakePosition.length);
     }
 
     /**
@@ -343,14 +320,6 @@ library TellorGettersLibrary {
         returns (uint256[5] memory)
     {
         return self.requestDetails[_requestId].valuesByTimestamp[_timestamp];
-    }
-
-    /**
-    * @dev Get the symbol of the token
-    * @return string of the token symbol
-    */
-    function getSymbol(TellorStorage.TellorStorageStruct storage self) internal pure returns (string memory) {
-        return "TT";
     }
 
     /**
@@ -382,14 +351,13 @@ library TellorGettersLibrary {
 
     /**
     * @dev Getter function for next requestId on queue/request with highest payout at time the function is called
-    * @return onDeck/info on request with highest payout-- RequestId, Totaltips, and API query string
+    * @return onDeck/info on request with highest payout-- RequestId, Totaltips
     */
-    function getVariablesOnDeck(TellorStorage.TellorStorageStruct storage self) internal view returns (uint256, uint256, string memory) {
+    function getVariablesOnDeck(TellorStorage.TellorStorageStruct storage self) internal view returns (uint256, uint256) {
         uint256 newRequestId = getTopRequestID(self);
         return (
             newRequestId,
-            self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")],
-            self.requestDetails[newRequestId].queryString
+            self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")]
         );
     }
 
@@ -427,13 +395,4 @@ library TellorGettersLibrary {
     {
         return self.requestDetails[_requestId].finalValues[_timestamp];
     }
-
-    /**
-    * @dev Getter for the total_supply of oracle tokens
-    * @return uint total supply
-    */
-    function totalSupply(TellorStorage.TellorStorageStruct storage self) internal view returns (uint256) {
-        return self.uintVars[keccak256("total_supply")];
-    }
-
 }

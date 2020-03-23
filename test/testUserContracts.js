@@ -12,28 +12,7 @@
 // //var OldTellor = artifacts.require("./oldContracts/OldTellor.sol")
 // var masterAbi = TellorMaster.abi;
 // const oracleAbi = Tellor.abi;
-
-// var api = "json(https://api.gdax.com/products/BTC-USD/ticker).price";
-// var api3 = "json(https://api.gdax.com/products/ETH-BTC/ticker).price";
-// var api2 = "json(https://api.gdax.com/products/ETH-USD/ticker).price";
-
-// function promisifyLogWatch(_address,_event) {
-//   return new Promise((resolve, reject) => {
-//     web3.eth.subscribe('logs', {
-//       address: _address,
-//       topics: [web3.utils.sha3(_event)]
-//     }, (error, result) => {
-//         if (error){
-//           console.log('Error',error);
-//           reject(error);
-//         }
-//         else{
-//        	resolve(result);
-//     	}
-//     })
-//   });
-// }
-
+// var ERC20 = artifacts.require("./ERC20.sol");
 // contract('UserContract Tests', function(accounts) {
 //   let oracle;
 //   let oracle2;
@@ -46,7 +25,7 @@
 
 //     beforeEach('Setup contract for each test', async function () {
 //         //oracleBase = await OldTellor.new();
-// oracleBase = await Tellor.new();
+// 		oracleBase = await Tellor.new();
 //         oracle = await TellorMaster.new(web3.utils.toChecksumAddress(oracleBase.address));
 //                 master = await new web3.eth.Contract(masterAbi,oracle.address);
 //         oa = (web3.utils.toChecksumAddress(oracle.address))

@@ -3,7 +3,7 @@ pragma solidity ^0.5.0;
 import "./TellorStorage.sol";
 import "./TellorTransfer.sol";
 import "./TellorDispute.sol";
-
+import "../interfaces/TokenInterface.sol";
 /**
 * itle Tellor Dispute
 * @dev Contais the methods related to miners staking and unstaking. Tellor.sol
@@ -26,9 +26,8 @@ library TellorStake {
         //set Constants
         self.uintVars[keccak256("decimals")] = 18;
         self.uintVars[keccak256("targetMiners")] = 200;
-        self.uintVars[keccak256("stakeAmount")] = 10e18;
         self.uintVars[keccak256("disputeFee")] = 10e18;
-        self.uintVars[keccak256("minimumStake")] = 500e18;
+        self.uintVars[keccak256("minimumStake")] = 100e18;
     }
 
     /**
@@ -37,27 +36,33 @@ library TellorStake {
     * can withdraw the deposit
     */
     function requestStakingWithdraw(TellorStorage.TellorStorageStruct storage self, uint _amount) public {
-        TellorStorage.StakeInfo storage stakes = self.stakerDetails[msg.sender];
+        requestStakingWithdrawInternal(self,msg.sender,_amount);
+    }
+
+    /**
+    * @dev This function allows stakers to request to withdraw their stake (no longer stake)
+    * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
+    * can withdraw the deposit
+    */
+    function requestStakingWithdrawInternal(TellorStorage.TellorStorageStruct storage self,address _party, uint _amount) internal {
+        TellorStorage.StakeInfo storage stakes = self.stakerDetails[_party];
         uint minimumStake = self.uintVars[keccak256("minimumStake")];
         //Require that the miner is staked
         require(stakes.currentStatus == 1, "Miner is not staked");
         require(_amount % minimumStake == 0, "Must be divisible by minimumStake");
-        require(_amount < stakes.amountStaked);
-        
-        
+        require(_amount <= TellorTransfer.balanceOf(self,_party));
         for(uint i=0; i <= _amount / minimumStake; i++) {
-            removeFromStakerArray(self, stakes.stakePosition[i],msg.sender);
+            removeFromStakerArray(self, stakes.stakePosition[i],_party);
         }
 
        //Change the miner staked to locked to be withdrawStake
-        if (stakes.amountStaked == 0){
+        if (TellorTransfer.balanceOf(self,_party) == 0){
             stakes.currentStatus = 2;
             self.uintVars[keccak256("stakerCount")] -= 1;
         }
-
         stakes.withdrawDate = now - (now % 86400);
         stakes.withdrawAmount = _amount;
-        emit StakeWithdrawRequested(msg.sender);
+        emit StakeWithdrawRequested(_party);
     }
 
     /**
@@ -69,14 +74,15 @@ library TellorStake {
         //passed by since they locked for withdraw
         require(now - (now % 86400) - stakes.withdrawDate >= 7 days, "7 days didn't pass");
         require(stakes.currentStatus !=3 , "Miner was not locked for withdrawal");
-        stakes.amountStaked -= stakes.withdrawAmount;
-        if (stakes.amountStaked == 0){
+        TellorTransfer.doTransfer(self,msg.sender,address(0),stakes.withdrawAmount);
+        if (TellorTransfer.balanceOf(self,msg.sender) == 0){
             stakes.currentStatus =0 ;
             self.uintVars[keccak256("stakerCount")] -= 1;
             self.uintVars[keccak256("uniqueStakers")] -= 1;
         }
-        //totalStaked -= _amount;?????????????????????? see line below, is that what you meant?
-        self.uintVars[keccak256("totalStaked")] -= stakes.amountStaked;
+        self.uintVars[keccak256("totalStaked")] -= stakes.withdrawAmount;
+        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
+        tellorToken.transfer(msg.sender,stakes.withdrawAmount);
         emit StakeWithdrawn(msg.sender);
     }
 
@@ -84,25 +90,27 @@ library TellorStake {
     * @dev This function allows miners to deposit their stake.
     */
     function depositStake(TellorStorage.TellorStorageStruct storage self, uint _amount) public {
-        require(TellorTransfer.balanceOf(self, msg.sender) >= _amount + self.stakerDetails[msg.sender].amountStaked , "Balance is lower than stake amount");
+       TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
+            
+        require(tellorToken.balanceOf(msg.sender) >= _amount + TellorTransfer.balanceOf(self,msg.sender), "Balance is lower than stake amount");
+        require(tellorToken.allowance(msg.sender,address(this)) >= _amount, "Proper amount must be allowed to this contract");
+        tellorToken.transferFrom(msg.sender, address(this), _amount);
         //Ensure they can only stake if they are not currrently staked or if their stake time frame has ended
         //and they are currently locked for witdhraw
         require(self.stakerDetails[msg.sender].currentStatus != 3, "Miner is in the wrong state");
-        if(self.stakerDetails[msg.sender].amountStaked == 0){
+        if(TellorTransfer.balanceOf(self,msg.sender) == 0){
             self.uintVars[keccak256("stakerCount")] += 1;
         }
-        uint minimumStake = self.uintVars[keccak256("minimumStake")];
-        require(_amount > minimumStake, "You must stake a certain amount");
-        require(_amount % minimumStake == 0, "Must be divisible by minimumStake");
-        for(uint i=0; i <= _amount / minimumStake; i++){
+        require(_amount >= self.uintVars[keccak256("minimumStake")], "You must stake a certain amount");
+        require(_amount % self.uintVars[keccak256("minimumStake")] == 0, "Must be divisible by minimumStake");
+        for(uint i=0; i < _amount / self.uintVars[keccak256("minimumStake")]; i++){
             self.stakerDetails[msg.sender].stakePosition.push(self.stakers.length);
             self.stakerDetails[msg.sender].stakePositionArrayIndex[self.stakers.length] = i;
             self.stakers.push(msg.sender);
         }
         self.stakerDetails[msg.sender].currentStatus = 1;
         self.stakerDetails[msg.sender].startDate = now - (now % 86400);
-        self.stakerDetails[msg.sender].amountStaked += _amount;
-
+        TellorTransfer.doTransfer(self,address(this),msg.sender,_amount);
         //self.uniqueStakers += 1;
         self.uintVars[keccak256("uniqueStakers")] += 1;
         //self.totalStaked += _amount;

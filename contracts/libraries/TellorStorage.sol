@@ -17,10 +17,8 @@ library TellorStorage {
         int256 tally; //current tally of votes for - against measure
         bool executed; //is the dispute settled
         bool disputeVotePassed; //did the vote pass?
-        bool isPropFork; //true for fork proposal NEW
         address reportedMiner; //miner who alledgedly submitted the 'bad value' will get disputeFee if dispute vote fails
         address reportingParty; //miner reporting the 'bad value'-pay disputeFee will get reportedMiner's stake if dispute vote passes
-        address proposedForkAddress; //new fork address (if fork proposal)
         mapping(bytes32 => uint256) disputeUintVars;
         //Each of the variables below is saved in the mapping disputeUintVars for each disputeID
         //e.g. TellorStorageStruct.DisputeById[disputeID].disputeUintVars[keccak256("requestId")]
@@ -40,7 +38,6 @@ library TellorStorage {
     struct StakeInfo {
         uint256 currentStatus; //0-not Staked, 1=Staked, 2=LockedForWithdraw 3= OnDispute
         uint256 startDate; //stake start date
-        uint256 amountStaked;
         uint256 withdrawDate;
         uint256 withdrawAmount;
         uint[] stakePosition;
@@ -55,15 +52,11 @@ library TellorStorage {
     }
 
     struct Request {
-        string queryString; //id to string api
-        string dataSymbol; //short name for api request
-        bytes32 queryHash; //hash of api string and granularity e.g. keccak256(abi.encodePacked(_sapi,_granularity))
         uint256[] requestTimestamps; //array of all newValueTimestamps requested
         mapping(bytes32 => uint256) apiUintVars;
         //Each of the variables below is saved in the mapping apiUintVars for each api request
         //e.g. requestDetails[_requestId].apiUintVars[keccak256("totalTip")]
         //These are the variables saved in this mapping:
-        // uint keccak256("granularity"); //multiplier for miners
         // uint keccak256("requestQPosition"); //index in requestQ
         // uint keccak256("totalTip");//bonus portion of payout
         mapping(uint256 => uint256) minedBlockNum; //[apiId][minedTimestamp]=>block.number
@@ -120,7 +113,6 @@ library TellorStorage {
         mapping(address => mapping(address => uint256)) allowed; //allowance for a given party and approver
         mapping(address => StakeInfo) stakerDetails; //mapping from a persons address to their staking info
         mapping(uint256 => Request) requestDetails; //mapping of apiID to details
-        mapping(bytes32 => uint256) requestIdByQueryHash; // api bytes32 gets an id = to count of requests array
         mapping(bytes32 => uint256) disputeIdByDisputeHash; //maps a hash to an ID for each dispute
     }
 }

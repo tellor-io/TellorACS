@@ -59,15 +59,6 @@ contract Tellor {
     function tallyVotes(uint256 _disputeId) external {
         tellor.tallyVotes(_disputeId);
     }
-
-    /**
-    * @dev Allows for a fork to be proposed
-    * @param _propNewTellorAddress address for new proposed Tellor
-    */
-    function proposeFork(address _propNewTellorAddress) external {
-        tellor.proposeFork(_propNewTellorAddress);
-    }
-
     /**
     * @dev Add tip to Request value from oracle
     * @param _requestId being requested to be mined
@@ -79,19 +70,6 @@ contract Tellor {
     }
 
     /**
-    * @dev Request to retreive value from oracle based on timestamp. The tip is not required to be
-    * greater than 0 because there are no tokens in circulation for the initial(genesis) request
-    * @param _c_sapi string API being requested be mined
-    * @param _c_symbol is the short string symbol for the api request
-    * @param _granularity is the number of decimals miners should include on the submitted value
-    * @param _tip amount the requester is willing to pay to be get on queue. Miners
-    * mine the onDeckQueryHash, or the api with the highest payout pool
-    */
-    function requestData(string calldata _c_sapi, string calldata _c_symbol, uint256 _granularity, uint256 _tip) external {
-        tellor.requestData(_c_sapi, _c_symbol, _granularity, _tip);
-    }
-
-    /**
     * @dev Proof of work is called by the miner when they submit the solution (proof of work and value)
     * @param _nonce uint submitted by miner
     * @param _requestId the apiId being mined
@@ -99,23 +77,6 @@ contract Tellor {
     */
     function submitMiningSolution(string calldata _nonce, uint256 _requestId, uint256 _value) external {
         tellor.submitMiningSolution(_nonce, _requestId, _value);
-    }
-
-    /**
-    * @dev Allows the current owner to propose transfer control of the contract to a
-    * newOwner and the ownership is pending until the new owner calls the claimOwnership
-    * function
-    * @param _pendingOwner The address to transfer ownership to.
-    */
-    function proposeOwnership(address payable _pendingOwner) external {
-        tellor.proposeOwnership(_pendingOwner);
-    }
-
-    /**
-    * @dev Allows the new owner to claim control of the contract
-    */
-    function claimOwnership() external {
-        tellor.claimOwnership();
     }
 
     /**
@@ -139,38 +100,6 @@ contract Tellor {
     */
     function withdrawStake() external {
         tellor.withdrawStake();
-    }
-
-    /**
-    * @dev This function approves a _spender an _amount of tokens to use
-    * @param _spender address
-    * @param _amount amount the spender is being approved for
-    * @return true if spender appproved successfully
-    */
-    function approve(address _spender, uint256 _amount) external returns (bool) {
-        return tellor.approve(_spender, _amount);
-    }
-
-    /**
-    * @dev Allows for a transfer of tokens to _to
-    * @param _to The address to send tokens to
-    * @param _amount The amount of tokens to send
-    * @return true if transfer is successful
-    */
-    function transfer(address _to, uint256 _amount) external returns (bool) {
-        return tellor.transfer(_to, _amount);
-    }
-
-    /**
-    * @dev Sends _amount tokens to _to from _from on the condition it
-    * is approved by _from
-    * @param _from The address holding the tokens being transferred
-    * @param _to The address of the recipient
-    * @param _amount The amount of tokens to be transferred
-    * @return True if the transfer was successful
-    */
-    function transferFrom(address _from, address _to, uint256 _amount) external returns (bool) {
-        return tellor.transferFrom(_from, _to, _amount);
     }
 
     /**

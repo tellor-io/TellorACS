@@ -12,11 +12,7 @@
 // const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
 // var masterAbi = TellorMaster.abi;
 // const oracleAbi = Tellor.abi;
-
-// var api = "json(https://api.gdax.com/products/BTC-USD/ticker).price";
-// var api3 = "json(https://api.gdax.com/products/ETH-BTC/ticker).price";
-// var api2 = "json(https://api.gdax.com/products/ETH-USD/ticker).price";
-
+// var ERC20 = artifacts.require("./ERC20.sol");
 // contract('UsingTellor Tests', function(accounts) {
 //   let oracleBase;
 //   let oracle;

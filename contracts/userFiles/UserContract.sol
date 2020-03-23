@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "../interfaces/TokenInterface.sol";
 import "../TellorMaster.sol";
 import "../Tellor.sol";
 import "./OracleIDDescriptions.sol";
@@ -19,8 +20,10 @@ contract UserContract is ADOInterface{
     address payable public owner;
     address payable public tellorStorageAddress;
     address public oracleIDDescriptionsAddress;
+    address public token;
     Tellor _tellor;
     TellorMaster _tellorm;
+    TokenInterface _token;
     OracleIDDescriptions descriptions;
 
     event OwnershipTransferred(address _previousOwner, address _newOwner);
@@ -32,10 +35,12 @@ contract UserContract is ADOInterface{
     * @dev the constructor sets the storage address and owner
     * @param _storage is the TellorMaster address ???
     */
-    constructor(address payable _storage) public {
+    constructor(address payable _storage, address _ttoken) public {
         tellorStorageAddress = _storage;
+        token = _ttoken;
         _tellor = Tellor(tellorStorageAddress); //we should delcall here
-        _tellorm = TellorMaster(tellorStorageAddress);
+        _tellorm = TellorMaster(tellorStorageAddress); //we should delcall here
+        _token = TokenInterface(_ttoken);
         owner = msg.sender;
     }
 
@@ -75,19 +80,7 @@ contract UserContract is ADOInterface{
     */
     function withdrawTokens() external {
         require(msg.sender == owner, "Sender is not owner");
-        _tellor.transfer(owner, _tellorm.balanceOf(address(this)));
-    }
-
-    /**
-    * @dev Allows the user to submit a request for data to the oracle using ETH
-    * @param c_sapi string API being requested to be mined
-    * @param _c_symbol is the short string symbol for the api request
-    * @param _granularity is the number of decimals miners should include on the submitted value
-    */
-    function requestDataWithEther(string calldata c_sapi, string calldata _c_symbol, uint256 _granularity) external payable {
-        uint _amount = (msg.value / tributePrice)*1e18;
-        require(_tellorm.balanceOf(address(this)) >= _amount, "Balance is lower than tip amount");
-        _tellor.requestData(c_sapi, _c_symbol, _granularity, _amount);
+        _token.transfer(owner, _token.balanceOf(address(this)));
     }
 
     /**
@@ -96,7 +89,7 @@ contract UserContract is ADOInterface{
     */
     function addTipWithEther(uint256 _apiId) external payable {
         uint _amount = (msg.value / tributePrice)*1e18;
-        require(_tellorm.balanceOf(address(this)) >= _amount, "Balance is lower than tip amount");
+        require(_token.balanceOf(address(this)) >= _amount, "Balance is lower than tip amount");
         _tellor.addTip(_apiId, _amount);
     }
 

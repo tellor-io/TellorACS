@@ -3,6 +3,7 @@ pragma solidity ^0.5.0;
 import "./UsingTellor.sol";
 import "../TellorMaster.sol";
 import "../Tellor.sol";
+import "../interfaces/TokenInterface.sol";
 /**
 * @title UsingTellor
 * This contracts creates for easy integration to the Tellor Tellor System
@@ -105,8 +106,9 @@ contract Optimistic is UsingTellor {
         //No basically, the dispute period for anyValue is within the granularity
         TellorMaster _tellor = TellorMaster(tellorUserContract.tellorStorageAddress());
         Tellor _tellorCore = Tellor(tellorUserContract.tellorStorageAddress());
+        TokenInterface _token = TokenInterface(tellorUserContract.token());
         uint256 _retrievedTimestamp;
-        uint256 _initialBalance = _tellor.balanceOf(address(this)); //Checks the balance of Tellor Tributes on this contract
+        uint256 _initialBalance = _token.balanceOf(address(this)); //Checks the balance of Tellor Tributes on this contract
         //Loops through all the Tellor requestsId's initially(in the constructor) associated with this contract data
         for (uint256 i = 1; i <= requestIds.length; i++) {
             //Get all values for that requestIds' timestamp
@@ -135,7 +137,7 @@ contract Optimistic is UsingTellor {
                 }
                 //otherwise request the ID and split the contracts initial tributes balance to equally tip all
                 //requests Ids associated with this price feed
-            } else if (_tellor.balanceOf(address(this)) > requestIds.length) {
+            } else if (_token.balanceOf(address(this)) > requestIds.length) {
                 //Request Id to be mined by adding to it's tip
                 _tellorCore.addTip(i, _initialBalance / requestIds.length);
             }

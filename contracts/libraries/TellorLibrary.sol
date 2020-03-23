@@ -7,6 +7,7 @@ import "./TellorTransfer.sol";
 import "./TellorDispute.sol";
 import "./TellorStake.sol";
 import "./TellorGettersLibrary.sol";
+import "../interfaces/TokenInterface.sol";
 
 /**
  * @title Tellor Oracle System Library
@@ -17,32 +18,19 @@ library TellorLibrary {
     using SafeMath for uint256;
 
     event TipAdded(address indexed _sender, uint256 indexed _requestId, uint256 _tip, uint256 _totalTips);
-    //Emits upon someone adding value to a pool; msg.sender, amount added, and timestamp incentivized to be mined
-    event DataRequested(
-        address indexed _sender,
-        string _query,
-        string _querySymbol,
-        uint256 _granularity,
-        uint256 indexed _requestId,
-        uint256 _totalTips
-    );
     //emits when a new challenge is created (either on mined block or when a new request is pushed forward on waiting system)
     event NewChallenge(
         bytes32 _currentChallenge,
         uint256 indexed _currentRequestId,
         uint256 _difficulty,
-        uint256 _multiplier,
-        string _query,
         uint256 _totalTips
     );
     //emits when a the payout of another request is higher after adding to the payoutPool or submitting a request
-    event NewRequestOnDeck(uint256 indexed _requestId, string _query, bytes32 _onDeckQueryHash, uint256 _onDeckTotalTips);
+    event NewRequestOnDeck(uint256 indexed _requestId, uint256 _onDeckTotalTips);
     //Emits upon a successful Mine, indicates the blocktime at point of the mine and the value mined
     event NewValue(uint256 indexed _requestId, uint256 _time, uint256 _value, uint256 _totalTips, bytes32 _currentChallenge);
     //Emits upon each mine (5 total) and shows the miner, nonce, and value submitted
     event NonceSubmitted(address indexed _miner, string _nonce, uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
-    event OwnershipTransferred(address indexed _previousOwner, address indexed _newOwner);
-    event OwnershipProposed(address indexed _previousOwner, address indexed _newOwner);
     event NewValidatorsSelected(address _validator);
 
     /*Functions*/
@@ -61,10 +49,13 @@ library TellorLibrary {
     */
     function addTip(TellorStorage.TellorStorageStruct storage self, uint256 _requestId, uint256 _tip) public {
         require(_requestId > 0, "RequestId is 0");
+        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
+            
+        require(tellorToken.allowance(msg.sender,address(this)) >= _tip);
 
         //If the tip > 0 transfer the tip to this contract
         if (_tip > 0) {
-            TellorTransfer.doTransfer(self, msg.sender, address(this), _tip);
+            tellorToken.transferFrom(msg.sender, address(this), _tip);
         }
 
         //Update the information for the request that should be mined next based on the tip submitted
@@ -72,72 +63,7 @@ library TellorLibrary {
         emit TipAdded(msg.sender, _requestId, _tip, self.requestDetails[_requestId].apiUintVars[keccak256("totalTip")]);
     }
 
-    /**
-    * @dev Request to retreive value from oracle based on timestamp. The tip is not required to be
-    * greater than 0 because there are no tokens in circulation for the initial(genesis) request
-    * @param _c_sapi string API being requested be mined
-    * @param _c_symbol is the short string symbol for the api request
-    * @param _granularity is the number of decimals miners should include on the submitted value
-    * @param _tip amount the requester is willing to pay to be get on queue. Miners
-    * mine the onDeckQueryHash, or the api with the highest payout pool
-    */
-    function requestData(
-        TellorStorage.TellorStorageStruct storage self,
-        string memory _c_sapi,
-        string memory _c_symbol,
-        uint256 _granularity,
-        uint256 _tip
-    ) public {
-        //Require at least one decimal place
-        require(_granularity > 0, "Too few decimal places");
-
-        //But no more than 18 decimal places
-        require(_granularity <= 1e18, "Too many decimal places");
-
-        //If it has been requested before then add the tip to it otherwise create the queryHash for it
-        string memory _sapi = _c_sapi;
-        string memory _symbol = _c_symbol;
-        require(bytes(_sapi).length > 0, "API string length is 0");
-        require(bytes(_symbol).length < 64, "API string symbol is greater than 64");
-        bytes32 _queryHash = keccak256(abi.encodePacked(_sapi, _granularity));
-
-        //If this is the first time the API and granularity combination has been requested then create the API and granularity hash
-        //otherwise the tip will be added to the requestId submitted
-        if (self.requestIdByQueryHash[_queryHash] == 0) {
-            self.uintVars[keccak256("requestCount")]++;
-            uint256 _requestId = self.uintVars[keccak256("requestCount")];
-            self.requestDetails[_requestId] = TellorStorage.Request({
-                queryString: _sapi,
-                dataSymbol: _symbol,
-                queryHash: _queryHash,
-                requestTimestamps: new uint256[](0)
-            });
-            self.requestDetails[_requestId].apiUintVars[keccak256("granularity")] = _granularity;
-            self.requestDetails[_requestId].apiUintVars[keccak256("requestQPosition")] = 0;
-            self.requestDetails[_requestId].apiUintVars[keccak256("totalTip")] = 0;
-            self.requestIdByQueryHash[_queryHash] = _requestId;
-
-            //If the tip > 0 it tranfers the tip to this contract
-            if (_tip > 0) {
-                TellorTransfer.doTransfer(self, msg.sender, address(this), _tip);
-            }
-            updateOnDeck(self, _requestId, _tip);
-            emit DataRequested(
-                msg.sender,
-                self.requestDetails[_requestId].queryString,
-                self.requestDetails[_requestId].dataSymbol,
-                _granularity,
-                _requestId,
-                _tip
-            );
-            //Add tip to existing request id since this is not the first time the api and granularity have been requested
-        } else {
-            addTip(self, self.requestIdByQueryHash[_queryHash], _tip);
-        }
-    }
-
-
-    /**
+     /**
     * @dev This fucntion is called by submitMiningSolution and adjusts the difficulty, sorts and stores the first
     * 5 values received, pays the miners, the dev share and assigns a new challenge
     * @param _nonce or solution for the PoW  for the requestId
@@ -145,6 +71,7 @@ library TellorLibrary {
     */
     function newBlock(TellorStorage.TellorStorageStruct storage self, string memory _nonce, uint256 _requestId) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
+        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
         selectNewValidators(self,true);
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
@@ -175,8 +102,8 @@ library TellorLibrary {
                 if (self.validValidator[temp3] == true){
                     self.missedCalls[temp3]++;
                     reselectNewValidators(self);
-                    if (self.missedCalls[temp3] == 3){
-                        TellorTransfer.doTransfer(self, temp3, self.addressVars[keccak256("_owner")], 1e18);
+                    if (self.missedCalls[temp3] == 5){
+                        TellorStake.requestStakingWithdrawInternal(self,temp3,TellorTransfer.balanceOf(self,temp3));
                     }
                 }
            }
@@ -186,7 +113,7 @@ library TellorLibrary {
 
         //Pay the miners
         for (i = 0; i < 5; i++) {
-            TellorTransfer.doTransfer(self, address(this), a[i].miner, self.uintVars[keccak256("currentTotalTips")] / 5);
+            tellorToken.transfer(a[i].miner, self.uintVars[keccak256("currentTotalTips")] / 5);
         }
         emit NewValue(
             _requestId,
@@ -238,14 +165,10 @@ library TellorLibrary {
                 self.currentChallenge,
                 _topId,
                 self.uintVars[keccak256("difficulty")],
-                self.requestDetails[_topId].apiUintVars[keccak256("granularity")],
-                self.requestDetails[_topId].queryString,
                 self.uintVars[keccak256("currentTotalTips")]
             );
             emit NewRequestOnDeck(
                 newRequestId,
-                self.requestDetails[newRequestId].queryString,
-                self.requestDetails[newRequestId].queryHash,
                 self.requestDetails[newRequestId].apiUintVars[keccak256("totalTip")]
             );
         } else {
@@ -322,29 +245,7 @@ library TellorLibrary {
     }
 
 
-
-    /**
-    * @dev Allows the current owner to propose transfer control of the contract to a
-    * newOwner and the ownership is pending until the new owner calls the claimOwnership
-    * function
-    * @param _pendingOwner The address to transfer ownership to.
-    */
-    function proposeOwnership(TellorStorage.TellorStorageStruct storage self, address payable _pendingOwner) internal {
-        require(msg.sender == self.addressVars[keccak256("_owner")], "Sender is not owner");
-        emit OwnershipProposed(self.addressVars[keccak256("_owner")], _pendingOwner);
-        self.addressVars[keccak256("pending_owner")] = _pendingOwner;
-    }
-
-    /**
-    * @dev Allows the new owner to claim control of the contract
-    */
-    function claimOwnership(TellorStorage.TellorStorageStruct storage self) internal {
-        require(msg.sender == self.addressVars[keccak256("pending_owner")], "Sender is not pending owner");
-        emit OwnershipTransferred(self.addressVars[keccak256("_owner")], self.addressVars[keccak256("pending_owner")]);
-        self.addressVars[keccak256("_owner")] = self.addressVars[keccak256("pending_owner")];
-    }
-
-    /**
+   /**
     * @dev This function updates APIonQ and the requestQ when requestData or addTip are ran
     * @param _requestId being requested
     * @param _tip is the tip to add
@@ -371,8 +272,6 @@ library TellorLibrary {
                 self.currentChallenge,
                 self.uintVars[keccak256("currentRequestId")],
                 self.uintVars[keccak256("difficulty")],
-                self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("granularity")],
-                self.requestDetails[self.uintVars[keccak256("currentRequestId")]].queryString,
                 self.uintVars[keccak256("currentTotalTips")]
             );
         } else {
@@ -381,7 +280,7 @@ library TellorLibrary {
             //is being currently mined)
             if (_payout > self.requestDetails[onDeckRequestId].apiUintVars[keccak256("totalTip")] || (onDeckRequestId == 0)) {
                 //let everyone know the next on queue has been replaced
-                emit NewRequestOnDeck(_requestId, _request.queryString, _request.queryHash, _payout);
+                emit NewRequestOnDeck(_requestId, _payout);
             }
 
             //if the request is not part of the requestQ[51] array
