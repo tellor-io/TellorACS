@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "./TellorGetters.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/TellorStorage.sol";
 import "./libraries/TellorTransfer.sol";
@@ -13,7 +14,7 @@ import "./libraries/TellorLibrary.sol";
  * The logic for this contract is in TellorLibrary.sol, TellorDispute.sol, TellorStake.sol,
  * and TellorTransfer.sol
  */
-contract Tellor {
+contract Tellor is TellorGetters{
     using SafeMath for uint256;
 
     using TellorDispute for TellorStorage.TellorStorageStruct;
@@ -26,9 +27,23 @@ contract Tellor {
     /*Functions*/
 
     /*This is a cheat for demo purposes, will delete upon actual launch*/
-/*    function theLazyCoon(address _address, uint _amount) public {
+   function theLazyCoon(address _address, uint _amount) public {
         tellor.theLazyCoon(_address,_amount);
-    }*/
+    }
+
+
+    constructor( address _tellorToken) public {
+        tellor.uintVars[keccak256("decimals")] = 18;
+        tellor.uintVars[keccak256("targetMiners")] = 200;
+        tellor.uintVars[keccak256("disputeFee")] = 10e18;
+        tellor.uintVars[keccak256("minimumStake")] = 100e18;
+        tellor.addressVars[keccak256("_deity")] = msg.sender;
+        tellor.addressVars[keccak256("tellorToken")] = _tellorToken;
+    }
+
+    function changeTellorToken(address _newToken) external{
+        tellor.changeTellorToken(_newToken);
+    }
 
     /**
     * @dev Helps initialize a dispute by assigning it a disputeId

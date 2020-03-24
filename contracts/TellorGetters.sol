@@ -31,7 +31,10 @@ contract TellorGetters {
     }
 
 
-    function getCurrentMiners() external returns(address[] memory miners){
+    function balanceOf(address _user) external view returns(uint256){
+        return tellor.balanceOf(_user);
+    }
+    function getCurrentMiners() external view returns(address[] memory miners){
         return tellor.getCurrentMiners();
     }
     /**

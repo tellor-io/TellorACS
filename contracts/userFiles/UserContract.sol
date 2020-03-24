@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "../interfaces/TokenInterface.sol";
-import "../TellorMaster.sol";
 import "../Tellor.sol";
 import "./OracleIDDescriptions.sol";
 import "../interfaces/ADOInterface.sol";
@@ -22,7 +21,6 @@ contract UserContract is ADOInterface{
     address public oracleIDDescriptionsAddress;
     address public token;
     Tellor _tellor;
-    TellorMaster _tellorm;
     TokenInterface _token;
     OracleIDDescriptions descriptions;
 
@@ -39,7 +37,6 @@ contract UserContract is ADOInterface{
         tellorStorageAddress = _storage;
         token = _ttoken;
         _tellor = Tellor(tellorStorageAddress); //we should delcall here
-        _tellorm = TellorMaster(tellorStorageAddress); //we should delcall here
         _token = TokenInterface(_ttoken);
         owner = msg.sender;
     }
@@ -109,10 +106,10 @@ contract UserContract is ADOInterface{
     * @return bool true if it is able to retreive a value, the value, and the value's timestamp
     */
     function getCurrentValue(uint256 _requestId) public view returns (bool ifRetrieve, uint256 value, uint256 _timestampRetrieved) {
-        uint256 _count = _tellorm.getNewValueCountbyRequestId(_requestId);
+        uint256 _count = _tellor.getNewValueCountbyRequestId(_requestId);
         if (_count > 0) {
-            _timestampRetrieved = _tellorm.getTimestampbyRequestIDandIndex(_requestId, _count - 1); //will this work with a zero index? (or insta hit?)
-            return (true, _tellorm.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
+            _timestampRetrieved = _tellor.getTimestampbyRequestIDandIndex(_requestId, _count - 1); //will this work with a zero index? (or insta hit?)
+            return (true, _tellor.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
         }
         return (false, 0, 0);
     }
@@ -147,18 +144,18 @@ contract UserContract is ADOInterface{
     * which it searched for the first verified value
     */
     function getFirstVerifiedDataAfter(uint256 _requestId, uint256 _timestamp) public view returns (bool, uint256, uint256 _timestampRetrieved) {
-        uint256 _count = _tellorm.getNewValueCountbyRequestId(_requestId);
+        uint256 _count = _tellor.getNewValueCountbyRequestId(_requestId);
         if (_count > 0) {
             for (uint256 i = _count; i > 0; i--) {
                 if (
-                    _tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1) > _timestamp &&
-                    _tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1) < block.timestamp - 86400
+                    _tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1) > _timestamp &&
+                    _tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1) < block.timestamp - 86400
                 ) {
-                    _timestampRetrieved = _tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1); //will this work with a zero index? (or insta hit?)
+                    _timestampRetrieved = _tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1); //will this work with a zero index? (or insta hit?)
                 }
             }
             if (_timestampRetrieved > 0) {
-                return (true, _tellorm.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
+                return (true, _tellor.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
             }
         }
         return (false, 0, 0);
@@ -175,15 +172,15 @@ contract UserContract is ADOInterface{
         view
         returns (bool _ifRetrieve, uint256 _value, uint256 _timestampRetrieved)
     {
-        uint256 _count = _tellorm.getNewValueCountbyRequestId(_requestId);
+        uint256 _count = _tellor.getNewValueCountbyRequestId(_requestId);
         if (_count > 0) {
             for (uint256 i = _count; i > 0; i--) {
-                if (_tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1) >= _timestamp) {
-                    _timestampRetrieved = _tellorm.getTimestampbyRequestIDandIndex(_requestId, i - 1); //will this work with a zero index? (or insta hit?)
+                if (_tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1) >= _timestamp) {
+                    _timestampRetrieved = _tellor.getTimestampbyRequestIDandIndex(_requestId, i - 1); //will this work with a zero index? (or insta hit?)
                 }
             }
             if (_timestampRetrieved > 0) {
-                return (true, _tellorm.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
+                return (true, _tellor.retrieveData(_requestId, _timestampRetrieved), _timestampRetrieved);
             }
         }
         return (false, 0, 0);
