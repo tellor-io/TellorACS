@@ -48,7 +48,7 @@ Why not just deploy the current Tellor implementation in another chain?
 3. Tellor's current structure was specifically desinged with Ethereum's limitations and DeFi in mind. Alternate chains have different data demands and even different features (e.g. speed) that we can and should incorporate into the desing.
 
 
-### Alternative Chain structure
+### Alternate Chain structure
 The plan for alterate chains is to build a PoS Tellor system utilizing the Tellor Token and the current network of the Tellor community to validate and provide data on the alternate chain. The design assummes the alternate chain has:
 
 * Functioning, Decentralized Token Bridge 
