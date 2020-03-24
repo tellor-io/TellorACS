@@ -10,18 +10,6 @@
   </a> 
 </p>
 
-* 
-
-## Table of Contents
-* [Overview](#overview)
-    * [In-Depth Overview](https://tellor.readthedocs.io/en/latest/)
-
-<details><summary>Contributing information</summary>
-
-   * [Maintainers](#Maintainers)
-   * [How to Contribute](#how2contribute)
-   * [Copyright](#copyright)
- </details>
 
 # Tellor Oracle Alternate Chain Structure (ACS)
 
@@ -51,7 +39,7 @@ The plan for alterate chains is to build a PoS Tellor system utilizing the Tello
 
 
 <p align="center">
-<img src="./public/acsStructure.png" width="400" height="200" alt = "How it works">
+<img src="./public/acsStructure.png" width="400" height="300" alt = "How it works">
 </p>
 
 The following workflow describes the steps for the ACS:
@@ -65,12 +53,6 @@ Parties pay for requests with TRB or native token to be split among validating s
 * Values can be disputed
 * Day long voting round initially, with additional dispute rounds (double the dispute fee and voting period each time)--Rounds are necessary to mitigate risk of flash voting. 
 * Voting based upon balance on sidechain  at beginning of dispute (so you can bring over more Tellor for each subsequent dispute)
-
-
-A deep dive in methodology is available here: [In-Depth Overview](https://tellor.readthedocs.io/en/latest/)
-
-### Useful links <a name="useful-links"> </a>
-Truffle - http://truffleframework.com/
 
 
 #### Maintainers <a name="maintainers"> </a> 
