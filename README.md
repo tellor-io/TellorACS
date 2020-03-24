@@ -22,6 +22,7 @@ Step 1: Deploy Tellor.sol on alternate chain
 ### Quick Truffle test
 
 ```Bash
+$ git clone 'https://github.com/tellor-io/TellorACS'
 $ npm install
 $ truffle compile
 $ truffle develop
