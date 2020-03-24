@@ -13,6 +13,21 @@
 
 # Tellor Oracle Alternate Chain Structure (ACS)
 
+### ACS implementation on Alternate Chains
+Implemenatation of the ACS will vary by specific blockchain. This iteration can be implemented on chains that are Ethereum EVM compatible.
+
+### Deployment steps
+Step 1: Deploy Tellor.sol on alternate chain
+
+### Quick Truffle test
+
+```Bash
+$ npm install
+$ truffle compile
+$ truffle develop
+$ migrate
+$ test
+```
 
 ## Overview <a name="overview"> </a>  
 Blockchains are closed systems that due to their consensus mechanisms cannot natively access off-chain data. If your smart contract relies on off-chain (e.g. internet or another chain) data to evaluate or execute a function, you either have to manually feed the data to your contract, incentivize users to do it, or rely on a centralized party to provide the data.
