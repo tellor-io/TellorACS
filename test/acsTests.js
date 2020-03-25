@@ -27,7 +27,11 @@ contract('ACS specific Tests', function(accounts) {
    });  
 
    it("change Tellor Contract", async function () {
-    console.log(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")),tellorToken.address)
+    console.log(await oracle.getCurrentVariables())
+    let v = await oracle.getAddressVars(web3.utils.keccak256("_deity"))
+      console.log(v)
+    let x = await oracle.getAddressVars(web3.utils.keccak256("tellorToken"))
+    console.log(x,tellorToken.address)
     assert(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")) == tellorToken.address, "token address should be correct")
     let newToken = await ERC20.new()
     await oracle.changeTellorToken(newToken.address);
@@ -59,15 +63,15 @@ contract('ACS specific Tests', function(accounts) {
    });
    it("test multiple staking one address, dispute and slashing", async function () {
      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
-      await web3.eth.sendTransaction({to: oracle.address,from:accounts[5],gas:2000000,data:oracle2.methods.depositStake(web3.utils.toWei('200')).encodeABI()})
-      await web3.eth.sendTransaction({to:oracle.address,from:accounts[5],gas:2000000,data:oracle2.methods.requestStakingWithdraw(web3.utils.toWei('100')).encodeABI()})
+      await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
+      await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
       await helper.advanceTime(86400 * 8);
-      await web3.eth.sendTransaction({to:oracle.address,from:accounts[5],data:oracle2.methods.withdrawStake().encodeABI()})
-      await  web3.eth.sendTransaction({to: oracle.address,from:accounts[1],gas:2000000,data:oracle2.methods.beginDispute(1,res[0],2).encodeABI()});
+      await oracle.withdrawStake({from:accounts[5]})
+      await  oracle.beginDispute(1,res[0],2,{from:accounts[1],gas:2000000});
       count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
-      await web3.eth.sendTransaction({to: oracle.address,from:accounts[3],gas:2000000,data:oracle2.methods.vote(1,true).encodeABI()});
+      await oracle.vote(1,true,{from:accounts[3],gas:2000000})
       await helper.advanceTime(86400 * 22);
-      await web3.eth.sendTransaction({to: oracle.address,from:accounts[0],gas:2000000,data:oracle2.methods.tallyVotes(1).encodeABI()});
+      await oracle.tallyVotes(1,{from:accounts[0],gas:2000000})
       dispInfo = await oracle.getAllDisputeVars(1);
       assert(dispInfo[2] == true,"Dispute Vote passed")
       balance2 = await oracle.balanceOf(accounts[2]);
@@ -82,12 +86,12 @@ contract('ACS specific Tests', function(accounts) {
    it("check reselection of validators", async function (){
        for(var i = 5;i<10;i++){
           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
-          await web3.eth.sendTransaction({to: oracle.address,from:account[i],gas:2000000,data:oracle2.methods.depositStake(web3.utils.toWei('100')).encodeABI()})
+          await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000})
         }
       let miners = await oracle.getCurrentMiners();
       console.log('Miners',miners)
       await helper.advanceTime(8640);
-      await web3.eth.sendTransaction({to: oracle.address,from:accounts[0],gas:2000000,data:oracle2.methods.reselectNewValidators().encodeABI()})
+      await oracle.reselectNewValidators({from:accounts[0],gas:2000000}) 
       let newMiners = await oracle.getCurrentMiners();
       console.log(newMiners)
       assert(miners != newMiners, "newMiners should be different") 
@@ -96,12 +100,12 @@ contract('ACS specific Tests', function(accounts) {
       for(var i = 5;i<10;i++){
         console.log(i)
           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
-          await web3.eth.sendTransaction({to: oracle.address,from:accounts[i],gas:2000000,data:oracle2.methods.depositStake(web3.utils.toWei('100')).encodeABI()})
+          await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000})
       }
       let miners = await oracle.getCurrentMiners();
       console.log(miners)
       await helper.advanceTime(8640);
-      await web3.eth.sendTransaction({to: oracle.address,from:accounts[0],gas:2000000,data:oracle2.methods.reselectNewValidators().encodeABI()})
+      await oracle.reselectNewValidators({from:accounts[0],gas:2000000})
       let newMiners = await oracle.getCurrentMiners();
       console.log(newMiners)
       assert(miners != newMiners, "newMiners should be different") 
@@ -110,12 +114,12 @@ contract('ACS specific Tests', function(accounts) {
       it("check reselection if not enough validators for reselection (only 7)", async function (){
       for(var i = 5;i<7;i++){
           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
-          await web3.eth.sendTransaction({to: oracle.address,from:accounts[i],gas:2000000,data:oracle2.methods.depositStake(web3.utils.toWei('100')).encodeABI()})
+          await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000})
       }
       let miners = await oracle.getCurrentMiners();
       console.log(miners)
       await helper.advanceTime(8640);
-      await web3.eth.sendTransaction({to: oracle.address,from:accounts[0],gas:2000000,data:oracle2.methods.reselectNewValidators().encodeABI()})
+      await oracle.reselectNewValidators({from:accounts[0],gas:2000000})
       let newMiners = await oracle.getCurrentMiners();
       console.log(newMiners)
       assert(miners != newMiners, "newMiners should be different") 

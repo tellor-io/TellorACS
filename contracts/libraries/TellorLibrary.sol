@@ -41,13 +41,15 @@ library TellorLibrary {
         TellorTransfer.updateBalanceAtNow(self.balances[_address],_amount);
     } 
 
-    function init(TellorStorage.TellorStorageStruct storage self,address _tellorToken) internal {
+    function init(TellorStorage.TellorStorageStruct storage self,address _tellorToken) public {
+        require (self.uintVars[keccak256("decimals")] == 0);
         self.uintVars[keccak256("decimals")] = 18;
         self.uintVars[keccak256("targetMiners")] = 200;
         self.uintVars[keccak256("disputeFee")] = 10e18;
         self.uintVars[keccak256("minimumStake")] = 100e18;
         self.addressVars[keccak256("_deity")] = msg.sender;
         self.addressVars[keccak256("tellorToken")] = _tellorToken;
+        emit NewTellorToken(self.addressVars[keccak256("tellorToken")]);
         emit NewTellorToken(_tellorToken);
     }
     
@@ -329,7 +331,7 @@ library TellorLibrary {
     /**
     * @dev Generates a random number to select validators
     */
-    function randomnumber(TellorStorage.TellorStorageStruct storage self, uint _max, uint _nonce) internal returns (uint){
+    function randomnumber(TellorStorage.TellorStorageStruct storage self, uint _max, uint _nonce) internal view returns (uint){
         return  uint(keccak256(abi.encodePacked(_nonce,now,self.uintVars[keccak256("totalTip")],msg.sender,block.difficulty,self.stakers.length))) % _max +1;
     }
 

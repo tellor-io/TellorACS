@@ -15,8 +15,6 @@ contract Tellor is TellorGetters{
 
     using TellorDispute for TellorStorage.TellorStorageStruct;
     using TellorLibrary for TellorStorage.TellorStorageStruct;
-    using TellorStake for TellorStorage.TellorStorageStruct;
-    using TellorTransfer for TellorStorage.TellorStorageStruct;
 
     TellorStorage.TellorStorageStruct tellor;
 
@@ -28,7 +26,7 @@ contract Tellor is TellorGetters{
     }
 
 
-    constructor(address _tellorToken) public {
+    constructor (address _tellorToken) public {
         tellor.init(_tellorToken);
     }
 
