@@ -4,19 +4,13 @@
 
 const Web3 = require('web3')
 const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8545'));
-const BN = require('bn.js');
 const helper = require("./helpers/test_helpers");
-const TellorMaster = artifacts.require("./TellorMaster.sol");
 const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
 var ERC20 = artifacts.require("./ERC20.sol");
 var oracleAbi = Tellor.abi;
-var masterAbi = TellorMaster.abi;
 
 contract('ACS specific Tests', function(accounts) {
   let oracle;
-  let oracle2;
-  let oracleBase;
-  let master;
   let tellorToken;
 
     beforeEach('Setup contract for each test', async function () {
@@ -24,39 +18,36 @@ contract('ACS specific Tests', function(accounts) {
         for(var i = 0;i<10;i++){
           await tellorToken.mint(accounts[i],web3.utils.toWei('200','ether'));
         }
-        oracleBase = await Tellor.new();
-        oracle = await TellorMaster.new(oracleBase.address,tellorToken.address);
-        master = await new web3.eth.Contract(masterAbi,oracle.address);
-        oracle2 = await new web3.eth.Contract(oracleAbi,oracleBase.address);
+        oracle = await Tellor.new(tellorToken.address);
         for(var i = 0;i<5;i++){
           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
-          await web3.eth.sendTransaction({to: oracle.address,from:accounts[i],gas:2000000,data:oracle2.methods.depositStake(web3.utils.toWei('100')).encodeABI()})
- 
+          await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
         }
-        await web3.eth.sendTransaction({to: oracle.address,from:accounts[0],gas:2000000,data:oracle2.methods.addTip(1,0).encodeABI()})
+        await oracle.addTip(1,0,{from:accounts[0],gas:2000000})
    });  
 
    it("change Tellor Contract", async function () {
+    console.log(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")),tellorToken.address)
     assert(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")) == tellorToken.address, "token address should be correct")
-    newToken = await ERC20.new()
+    let newToken = await ERC20.new()
     await oracle.changeTellorToken(newToken.address);
     assert(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")) == newToken.address, "new token should be correct")
    });
    it("test multiple staking one address", async function () {
      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
-    await web3.eth.sendTransaction({to: oracle.address,from:accounts[5],gas:2000000,data:oracle2.methods.depositStake(web3.utils.toWei('200')).encodeABI()})
+    await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
     assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('200'))
     let vars = await oracle.getStakerInfo(accounts[5])
     assert(vars[2] == 2, "should be staked twice");
    });
    it("test multiple staking one address, removal of part", async function () {
      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
-    await web3.eth.sendTransaction({to: oracle.address,from:accounts[5],gas:2000000,data:oracle2.methods.depositStake(web3.utils.toWei('200')).encodeABI()})
+    await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
     console.log('1')
-    await web3.eth.sendTransaction({to:oracle.address,from:accounts[5],gas:2000000,data:oracle2.methods.requestStakingWithdraw(web3.utils.toWei('100')).encodeABI()})
+    await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
     await helper.advanceTime(86400 * 8);
     console.log('2')
-    await web3.eth.sendTransaction({to:oracle.address,from:accounts[5],data:oracle2.methods.withdrawStake().encodeABI()})
+    await oracle.withdrawStake({from:accounts[5],gas:2000000})
     assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('100'))
     let vars = await oracle.getStakerInfo(accounts[5])
     assert(vars[2] == 1);

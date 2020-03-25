@@ -1,11 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./TellorGetters.sol";
-import "./libraries/SafeMath.sol";
-import "./libraries/TellorStorage.sol";
-import "./libraries/TellorTransfer.sol";
 import "./libraries/TellorDispute.sol";
-import "./libraries/TellorStake.sol";
 import "./libraries/TellorLibrary.sol";
 
 /**
@@ -32,13 +28,8 @@ contract Tellor is TellorGetters{
     }
 
 
-    constructor( address _tellorToken) public {
-        tellor.uintVars[keccak256("decimals")] = 18;
-        tellor.uintVars[keccak256("targetMiners")] = 200;
-        tellor.uintVars[keccak256("disputeFee")] = 10e18;
-        tellor.uintVars[keccak256("minimumStake")] = 100e18;
-        tellor.addressVars[keccak256("_deity")] = msg.sender;
-        tellor.addressVars[keccak256("tellorToken")] = _tellorToken;
+    constructor(address _tellorToken) public {
+        tellor.init(_tellorToken);
     }
 
     function changeTellorToken(address _newToken) external{

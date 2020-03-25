@@ -32,7 +32,7 @@ library TellorLibrary {
     //Emits upon each mine (5 total) and shows the miner, nonce, and value submitted
     event NonceSubmitted(address indexed _miner, string _nonce, uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
     event NewValidatorsSelected(address _validator);
-
+    event NewTellorToken(address _token);
     /*Functions*/
 
     /*This is a cheat for demo purposes, will delete upon actual launch*/
@@ -41,6 +41,16 @@ library TellorLibrary {
         TellorTransfer.updateBalanceAtNow(self.balances[_address],_amount);
     } 
 
+    function init(TellorStorage.TellorStorageStruct storage self,address _tellorToken) internal {
+        self.uintVars[keccak256("decimals")] = 18;
+        self.uintVars[keccak256("targetMiners")] = 200;
+        self.uintVars[keccak256("disputeFee")] = 10e18;
+        self.uintVars[keccak256("minimumStake")] = 100e18;
+        self.addressVars[keccak256("_deity")] = msg.sender;
+        self.addressVars[keccak256("tellorToken")] = _tellorToken;
+        emit NewTellorToken(_tellorToken);
+    }
+    
     /**
     * @dev Add tip to Request value from oracle
     * @param _requestId being requested to be mined
