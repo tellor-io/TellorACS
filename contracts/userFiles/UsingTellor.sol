@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "../TellorMaster.sol";
 import "../Tellor.sol";
 import "../interfaces/TokenInterface.sol";
 import "./UserContract.sol";

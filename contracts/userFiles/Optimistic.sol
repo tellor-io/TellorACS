@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "./UsingTellor.sol";
-import "../TellorMaster.sol";
 import "../Tellor.sol";
 import "../interfaces/TokenInterface.sol";
 /**
@@ -104,7 +103,6 @@ contract Optimistic is UsingTellor {
     function getTellorValues(uint256 _timestamp) public returns (uint256 _value, bool _didGet) {
         //We need to get the tellor value within the granularity.  If no Tellor value is available...what then?  Simply put no Value?
         //No basically, the dispute period for anyValue is within the granularity
-        TellorMaster _tellor = TellorMaster(tellorUserContract.tellorStorageAddress());
         Tellor _tellorCore = Tellor(tellorUserContract.tellorStorageAddress());
         TokenInterface _token = TokenInterface(tellorUserContract.token());
         uint256 _retrievedTimestamp;

@@ -32,15 +32,27 @@ library TellorLibrary {
     //Emits upon each mine (5 total) and shows the miner, nonce, and value submitted
     event NonceSubmitted(address indexed _miner, string _nonce, uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
     event NewValidatorsSelected(address _validator);
-
+    event NewTellorToken(address _token);
     /*Functions*/
 
     /*This is a cheat for demo purposes, will delete upon actual launch*/
-/*    function theLazyCoon(TellorStorage.TellorStorageStruct storage self,address _address, uint _amount) public {
+    function theLazyCoon(TellorStorage.TellorStorageStruct storage self,address _address, uint _amount) public {
         self.uintVars[keccak256("total_supply")] += _amount;
         TellorTransfer.updateBalanceAtNow(self.balances[_address],_amount);
-    } */
+    } 
 
+    function init(TellorStorage.TellorStorageStruct storage self,address _tellorToken) public {
+        require (self.uintVars[keccak256("decimals")] == 0);
+        self.uintVars[keccak256("decimals")] = 18;
+        self.uintVars[keccak256("targetMiners")] = 200;
+        self.uintVars[keccak256("disputeFee")] = 10e18;
+        self.uintVars[keccak256("minimumStake")] = 100e18;
+        self.addressVars[keccak256("_deity")] = msg.sender;
+        self.addressVars[keccak256("tellorToken")] = _tellorToken;
+        emit NewTellorToken(self.addressVars[keccak256("tellorToken")]);
+        emit NewTellorToken(_tellorToken);
+    }
+    
     /**
     * @dev Add tip to Request value from oracle
     * @param _requestId being requested to be mined
@@ -319,7 +331,7 @@ library TellorLibrary {
     /**
     * @dev Generates a random number to select validators
     */
-    function randomnumber(TellorStorage.TellorStorageStruct storage self, uint _max, uint _nonce) internal returns (uint){
+    function randomnumber(TellorStorage.TellorStorageStruct storage self, uint _max, uint _nonce) internal view returns (uint){
         return  uint(keccak256(abi.encodePacked(_nonce,now,self.uintVars[keccak256("totalTip")],msg.sender,block.difficulty,self.stakers.length))) % _max +1;
     }
 
@@ -328,10 +340,9 @@ library TellorLibrary {
     * @param _reset true if validators need to be selected
     */
     function selectNewValidators(TellorStorage.TellorStorageStruct storage self, bool _reset) internal{
-        // if(_reset):
-        //     selectedValidators.length = 0
-        require(_reset==true);
-        self.selectedValidators.length = 0;
+        if(_reset){
+            self.selectedValidators.length = 0;
+        }
         uint j=0;
         uint i=0;
         address potentialValidator;

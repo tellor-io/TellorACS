@@ -30,6 +30,13 @@ contract TellorGetters {
         return tellor.didMine(_challenge, _miner);
     }
 
+
+    function balanceOf(address _user) external view returns(uint256){
+        return tellor.balanceOf(_user);
+    }
+    function getCurrentMiners() external view returns(address[] memory miners){
+        return tellor.getCurrentMiners();
+    }
     /**
     * @dev Checks if an address voted in a given dispute
     * @param _disputeId to look up

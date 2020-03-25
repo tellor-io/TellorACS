@@ -230,8 +230,6 @@ library TellorDispute {
         } else {
            self.disputesById[disputeId].disputeUintVars[keccak256("fee")] * self.disputesById[disputeId].disputeUintVars[keccak256("DisputeRound")] * 2;
         }
-
-        TellorStorage.Dispute storage disp = self.disputesById[disputeId];
         self.disputesById[disputeId].disputeUintVars[keccak256("DisputeLock")] == now + 1 days;
     }
 

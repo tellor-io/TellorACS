@@ -1,10 +1,7 @@
 pragma solidity ^0.5.0;
 
-import "./libraries/SafeMath.sol";
-import "./libraries/TellorStorage.sol";
-import "./libraries/TellorTransfer.sol";
+import "./TellorGetters.sol";
 import "./libraries/TellorDispute.sol";
-import "./libraries/TellorStake.sol";
 import "./libraries/TellorLibrary.sol";
 
 /**
@@ -13,22 +10,29 @@ import "./libraries/TellorLibrary.sol";
  * The logic for this contract is in TellorLibrary.sol, TellorDispute.sol, TellorStake.sol,
  * and TellorTransfer.sol
  */
-contract Tellor {
+contract Tellor is TellorGetters{
     using SafeMath for uint256;
 
     using TellorDispute for TellorStorage.TellorStorageStruct;
     using TellorLibrary for TellorStorage.TellorStorageStruct;
-    using TellorStake for TellorStorage.TellorStorageStruct;
-    using TellorTransfer for TellorStorage.TellorStorageStruct;
 
     TellorStorage.TellorStorageStruct tellor;
 
     /*Functions*/
 
     /*This is a cheat for demo purposes, will delete upon actual launch*/
-/*    function theLazyCoon(address _address, uint _amount) public {
+   function theLazyCoon(address _address, uint _amount) public {
         tellor.theLazyCoon(_address,_amount);
-    }*/
+    }
+
+
+    constructor (address _tellorToken) public {
+        tellor.init(_tellorToken);
+    }
+
+    function changeTellorToken(address _newToken) external{
+        tellor.changeTellorToken(_newToken);
+    }
 
     /**
     * @dev Helps initialize a dispute by assigning it a disputeId
@@ -86,6 +90,10 @@ contract Tellor {
         tellor.depositStake(_amount);
     }
 
+
+    function reselectNewValidators() external{
+        tellor.reselectNewValidators();
+    }
     /**
     * @dev This function allows stakers to request to withdraw their stake (no longer stake)
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they

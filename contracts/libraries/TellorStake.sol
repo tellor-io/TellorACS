@@ -18,19 +18,6 @@ library TellorStake {
     /*Functions*/
 
     /**
-    * @dev This function stakes the five initial miners, sets the supply and all the constant variables.
-    * This function is called by the constructor function on TellorMaster.sol
-    */
-    function init(TellorStorage.TellorStorageStruct storage self) public {
-        require(self.uintVars[keccak256("decimals")] == 0, "Too many decimals");
-        //set Constants
-        self.uintVars[keccak256("decimals")] = 18;
-        self.uintVars[keccak256("targetMiners")] = 200;
-        self.uintVars[keccak256("disputeFee")] = 10e18;
-        self.uintVars[keccak256("minimumStake")] = 100e18;
-    }
-
-    /**
     * @dev This function allows stakers to request to withdraw their stake (no longer stake)
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
     * can withdraw the deposit
@@ -92,7 +79,7 @@ library TellorStake {
     function depositStake(TellorStorage.TellorStorageStruct storage self, uint _amount) public {
        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
-        require(tellorToken.balanceOf(msg.sender) >= _amount + TellorTransfer.balanceOf(self,msg.sender), "Balance is lower than stake amount");
+        require(tellorToken.balanceOf(msg.sender) >= _amount, "Balance is lower than stake amount");
         require(tellorToken.allowance(msg.sender,address(this)) >= _amount, "Proper amount must be allowed to this contract");
         tellorToken.transferFrom(msg.sender, address(this), _amount);
         //Ensure they can only stake if they are not currrently staked or if their stake time frame has ended
