@@ -1,8 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./TellorGetters.sol";
-import "./libraries/TellorDispute.sol";
-import "./libraries/TellorLibrary.sol";
+
 
 /**
  * @title Tellor Oracle System
@@ -13,10 +12,7 @@ import "./libraries/TellorLibrary.sol";
 contract Tellor is TellorGetters{
     using SafeMath for uint256;
 
-    using TellorDispute for TellorStorage.TellorStorageStruct;
-    using TellorLibrary for TellorStorage.TellorStorageStruct;
-
-    TellorStorage.TellorStorageStruct tellor;
+    event NewTellorToken(address _token);
 
     /*Functions*/
 
@@ -27,7 +23,14 @@ contract Tellor is TellorGetters{
 
 
     constructor (address _tellorToken) public {
-        tellor.init(_tellorToken);
+        tellor.uintVars[keccak256("decimals")] = 18;
+        tellor.uintVars[keccak256("targetMiners")] = 200;
+        tellor.uintVars[keccak256("disputeFee")] = 10e18;
+        tellor.uintVars[keccak256("minimumStake")] = 100e18;
+        tellor.addressVars[keccak256("_deity")] = msg.sender;
+        tellor.addressVars[keccak256("tellorToken")] = _tellorToken;
+        emit NewTellorToken(tellor.addressVars[keccak256("tellorToken")]);
+        emit NewTellorToken(_tellorToken);
     }
 
     function changeTellorToken(address _newToken) external{

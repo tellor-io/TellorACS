@@ -81,7 +81,6 @@ library TellorStorage {
         //e.g. addressVars[keccak256("tellorContract")] = address
         //These are the variables saved in this mapping:
         // address keccak256("tellorContract");//Tellor address
-        // address  keccak256("_owner");//Tellor Owner address
         // address  keccak256("_deity");//Tellor Owner that can do things at will
         mapping(bytes32 => uint256) uintVars;
         //uint fields in the Tellor contract are saved the uintVars mapping

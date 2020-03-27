@@ -32,19 +32,12 @@ library TellorGettersLibrary {
         return self.selectedValidators;
     }
 
-    //Only needs to be in library
     /**
     * @dev This function allows the deity to upgrade the Tellor System
-    * @param _tellorContract address of new updated TellorCore contract
+    * @param _newToken address of new updated TellorCore contract
     */
-    function changeTellorContract(TellorStorage.TellorStorageStruct storage self, address _tellorContract) internal {
-        require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
-        self.addressVars[keccak256("tellorContract")] = _tellorContract;
-        emit NewTellorAddress(_tellorContract);
-    }
-
     function changeTellorToken(TellorStorage.TellorStorageStruct storage self, address _newToken)internal{
-                require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
+        require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
         self.addressVars[keccak256("tellorToken")] = _newToken;
         emit NewTellorToken(_newToken);
     }

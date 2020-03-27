@@ -5,6 +5,8 @@ import "./libraries/TellorStorage.sol";
 import "./libraries/TellorTransfer.sol";
 import "./libraries/TellorGettersLibrary.sol";
 import "./libraries/TellorStake.sol";
+import "./libraries/TellorLibrary.sol";
+import "./libraries/TellorDispute.sol";
 
 /**
 * @title Tellor Getters
@@ -17,6 +19,9 @@ contract TellorGetters {
     using TellorTransfer for TellorStorage.TellorStorageStruct;
     using TellorGettersLibrary for TellorStorage.TellorStorageStruct;
     using TellorStake for TellorStorage.TellorStorageStruct;
+
+    using TellorDispute for TellorStorage.TellorStorageStruct;
+    using TellorLibrary for TellorStorage.TellorStorageStruct;
 
     TellorStorage.TellorStorageStruct tellor;
 
