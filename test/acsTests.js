@@ -43,25 +43,27 @@ contract('ACS specific Tests', function(accounts) {
     await oracle.changeTellorToken(newToken.address);
     assert(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")) == newToken.address, "new token should be correct")
    });
-   // it("test multiple staking one address", async function () {
-   //   await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
-   //  await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
-   //  assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('200'))
-   //  let vars = await oracle.getStakerInfo(accounts[5])
-   //  assert(vars[2] == 2, "should be staked twice");
-   // });
-   // it("test multiple staking one address, removal of part", async function () {
-   //   await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
-   //  await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
-   //  console.log('1')
-   //  await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
-   //  await helper.advanceTime(86400 * 8);
-   //  console.log('2')
-   //  await oracle.withdrawStake({from:accounts[5],gas:2000000})
-   //  assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('100'))
-   //  let vars = await oracle.getStakerInfo(accounts[5])
-   //  assert(vars[2] == 1);
-   // });
+   it("test multiple staking one address", async function () {
+     await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
+    await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
+    assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('200'))
+    let vars = await oracle.getStakerInfo(accounts[5])
+    assert(vars[2] == 2, "should be staked twice");
+   });
+   it("test multiple staking one address, removal of part", async function () {
+    await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
+    console.log('aproval')
+    await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
+    console.log('deposit')
+    await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
+    console.log('3')
+    await helper.advanceTime(86400 * 8);
+    console.log('4')
+    await oracle.withdrawStake({from:accounts[5],gas:2000000})
+    assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('100'))
+    let vars = await oracle.getStakerInfo(accounts[5])
+    assert(vars[2] == 1);
+   });
    //  it("check validator selection", async function () {
    //    let miners = await oracle.getCurrentMiners();
    //    console.log('miners',miners)
