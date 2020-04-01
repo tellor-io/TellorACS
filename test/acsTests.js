@@ -50,25 +50,27 @@ contract('ACS specific Tests', function(accounts) {
     let vars = await oracle.getStakerInfo(accounts[5])
     assert(vars[2] == 2, "should be staked twice");
    });
-   it("test multiple staking one address, removal of part", async function () {
-    await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
-    console.log('aproval')
-    await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
-    console.log('deposit')
-    await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
-    console.log('3')
-    await helper.advanceTime(86400 * 8);
-    console.log('4')
-    await oracle.withdrawStake({from:accounts[5],gas:2000000})
-    assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('100'))
-    let vars = await oracle.getStakerInfo(accounts[5])
-    assert(vars[2] == 1);
-   });
-   //  it("check validator selection", async function () {
-   //    let miners = await oracle.getCurrentMiners();
-   //    console.log('miners',miners)
-   //    assert(miners.length == 5, "miner selection should work")
+   // it("test multiple staking one address, removal of part", async function () {
+   //  await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
+   //  console.log('aproval')
+   //  await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
+   //  console.log('deposit')
+   //  await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
+   //  console.log('requestWithdraw')
+   //  await helper.advanceTime(86400 * 8);
+   //  console.log('advanceTime')
+   //  await oracle.withdrawStake({from:accounts[5],gas:2000000})
+   //  assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('100'))
+   //  let vars = await oracle.getStakerInfo(accounts[5])
+   //  assert(vars[2] == 1);
    // });
+
+   /* where do we select initial validators--currently only in NewBlock...??*/
+    it("check validator selection", async function () {
+      let miners = await oracle.getCurrentMiners();
+      console.log('miners',miners)
+      assert(miners.length == 5, "miner selection should work")
+   });
    // it("test multiple staking one address, dispute and slashing", async function () {
    //   await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
    //    await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
@@ -91,19 +93,19 @@ contract('ACS specific Tests', function(accounts) {
    //    assert(vars[2] == 1, "should only be staked once now");
    // });
 
-   // it("check reselection of validators", async function (){
-   //     for(var i = 5;i<10;i++){
-   //        await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
-   //        await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000})
-   //      }
-   //    let miners = await oracle.getCurrentMiners();
-   //    console.log('Miners',miners)
-   //    await helper.advanceTime(8640);
-   //    await oracle.reselectNewValidators({from:accounts[0],gas:2000000}) 
-   //    let newMiners = await oracle.getCurrentMiners();
-   //    console.log(newMiners)
-   //    assert(miners != newMiners, "newMiners should be different") 
-   // });
+   it("check reselection of validators", async function (){
+       for(var i = 5;i<10;i++){
+          await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
+          await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000})
+        }
+      let miners = await oracle.getCurrentMiners();
+      console.log('Miners',miners)
+      await helper.advanceTime(8640);
+      await oracle.reselectNewValidators({from:accounts[0],gas:2000000}) 
+      let newMiners = await oracle.getCurrentMiners();
+      console.log(newMiners)
+      assert(miners != newMiners, "newMiners should be different") 
+   });
    // it("check multiple reselection of validators", async function (){
    //    for(var i = 5;i<10;i++){
    //      console.log(i)

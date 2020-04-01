@@ -16,7 +16,7 @@ library TellorStake {
     event StakeWithdrawRequested(address indexed _sender); //Emits when a staker begins the 7 day withdraw period
 
     /*Functions*/
-
+    event print(uint number);
     /**
     * @dev This function allows stakers to request to withdraw their stake (no longer stake)
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
@@ -32,7 +32,7 @@ library TellorStake {
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
     * can withdraw the deposit
     */
-    event print(uint number);
+
     function requestStakingWithdrawInternal(TellorStorage.TellorStorageStruct storage self,address _party, uint _amount) internal {
         emit print(0);
         TellorStorage.StakeInfo storage stakes = self.stakerDetails[_party];
@@ -97,6 +97,10 @@ emit print(6);
         if(TellorTransfer.balanceOf(self,msg.sender) == 0){
             self.uintVars[keccak256("stakerCount")] += 1;
         }
+
+/*        if (self.uintVars[keccak256("stakerCount")] <= 5) {
+            self.selectedValidators.push(msg.sender);
+        }*/
         require(_amount >= self.uintVars[keccak256("minimumStake")], "You must stake a certain amount");
         require(_amount % self.uintVars[keccak256("minimumStake")] == 0, "Must be divisible by minimumStake");
         for(uint i=0; i < _amount / self.uintVars[keccak256("minimumStake")]; i++){
@@ -109,6 +113,7 @@ emit print(6);
         TellorTransfer.doTransfer(self,address(this),msg.sender,_amount);
         //self.uniqueStakers += 1;
         self.uintVars[keccak256("uniqueStakers")] += 1;
+
         //self.totalStaked += _amount;
         self.uintVars[keccak256("totalStaked")]  += _amount;
         emit NewStake(msg.sender);

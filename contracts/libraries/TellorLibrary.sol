@@ -59,7 +59,7 @@ library TellorLibrary {
         if (_tip > 0) {
             tellorToken.transferFrom(msg.sender, address(this), _tip);
         }
-
+ 
         //Update the information for the request that should be mined next based on the tip submitted
         updateOnDeck(self, _requestId, _tip);
         emit TipAdded(msg.sender, _requestId, _tip, self.requestDetails[_requestId].apiUintVars[keccak256("totalTip")]);
@@ -176,6 +176,7 @@ library TellorLibrary {
         } else {
             self.uintVars[keccak256("currentTotalTips")] = 0;
             self.currentChallenge = "";
+            self.selectedValidators.length = 0;
         }
     }
 
@@ -255,6 +256,7 @@ library TellorLibrary {
     function updateOnDeck(TellorStorage.TellorStorageStruct storage self, uint256 _requestId, uint256 _tip) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         uint256 onDeckRequestId = TellorGettersLibrary.getTopRequestID(self);
+   
         //If the tip >0 update the tip for the requestId
         if (_tip > 0) {
             _request.apiUintVars[keccak256("totalTip")] = _request.apiUintVars[keccak256("totalTip")].add(_tip);
@@ -270,6 +272,7 @@ library TellorLibrary {
             self.uintVars[keccak256("currentRequestId")] = _requestId;
             self.uintVars[keccak256("currentTotalTips")] = _payout;
             self.currentChallenge = keccak256(abi.encodePacked(_payout, self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
+            selectNewValidators(self, false);
             emit NewChallenge(
                 self.currentChallenge,
                 self.uintVars[keccak256("currentRequestId")],
@@ -315,7 +318,7 @@ library TellorLibrary {
     */
     function reselectNewValidators(TellorStorage.TellorStorageStruct storage self) public{
         require( self.uintVars[keccak256("lastSelection")] < now - 30, "has not been long enough reselect");
-        selectNewValidators(self,false);
+        selectNewValidators(self,false);// ??? Does false mean to select new validators?
     }
 
     /**
@@ -325,28 +328,49 @@ library TellorLibrary {
         return  uint(keccak256(abi.encodePacked(_nonce,now,self.uintVars[keccak256("totalTip")],msg.sender,block.difficulty,self.stakers.length))) % _max +1;
     }
 
+event print2(uint num);
     /**
     * @dev Selects validators
-    * @param _reset true if validators need to be selected
+    * @param _reset true to delete existing validators and re-selected
     */
-    function selectNewValidators(TellorStorage.TellorStorageStruct storage self, bool _reset) internal{
+    function selectNewValidators(TellorStorage.TellorStorageStruct storage self, bool _reset) public{
         if(_reset){
             self.selectedValidators.length = 0;
         }
+        emit print2(1);
+        
         uint j=0;
-        uint i=0;
+        //uint i=0;
         address potentialValidator;
-        while(j < 5){
-            potentialValidator = self.stakers[randomnumber(self,self.stakers.length,i)];
-            for(uint k=0;k<self.selectedValidators.length;k++){
-                if(potentialValidator != self.selectedValidators[k]){
+        emit print2(2);
+//         while(j < 5){
+            emit print2(3);
+            //potentialValidator = self.stakers[randomnumber(self,self.stakers.length,0)];
+            emit print2(4);
+/*            if(self.selectedValidators.length == 0){
+               emit  print2(5);
                     self.selectedValidators.push(potentialValidator);
                     emit NewValidatorsSelected(potentialValidator);
                     self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
-                    j++;
-               }
-            }
-        }
+                    emit print2(6);
+                    j++; 
+            }*/
+/*            else{
+                for(uint k=0;k<self.selectedValidators.length;k++){
+                   emit  print2(7);
+                    if(potentialValidator != self.selectedValidators[k]){
+                        emit print2(8);
+                        self.selectedValidators.push(potentialValidator);
+                        emit print2(9);
+                        emit NewValidatorsSelected(potentialValidator);
+                        self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
+                        emit print2(10);
+                        j++;
+                   }
+                }
+            }*/
+//        }
+        emit print2(11);
         self.uintVars[keccak256("lastSelected")] = now;
     }
 
