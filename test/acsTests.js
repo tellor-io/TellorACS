@@ -29,6 +29,7 @@ contract('ACS specific Tests', function(accounts) {
           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
         }
+        console.log(await oracle.getCurrentMiners())
         await oracle.addTip(1,0,{from:accounts[0],gas:2000000})
    });  
 
@@ -104,7 +105,7 @@ contract('ACS specific Tests', function(accounts) {
       await oracle.reselectNewValidators({from:accounts[0],gas:2000000}) 
       let newMiners = await oracle.getCurrentMiners();
       console.log(newMiners)
-      assert(miners != newMiners, "newMiners should be different") 
+      assert(miners.length  < newMiners.length, "newMiners should be longer")
    });
    // it("check multiple reselection of validators", async function (){
    //    for(var i = 5;i<10;i++){

@@ -325,10 +325,12 @@ library TellorLibrary {
     * @dev Generates a random number to select validators
     */
     function randomnumber(TellorStorage.TellorStorageStruct storage self, uint _max, uint _nonce) internal view returns (uint){
-        return  uint(keccak256(abi.encodePacked(_nonce,now,self.uintVars[keccak256("totalTip")],msg.sender,block.difficulty,self.stakers.length))) % _max +1;
+        return  uint(keccak256(abi.encodePacked(_nonce,now,self.uintVars[keccak256("totalTip")],msg.sender,block.difficulty,self.stakers.length))) % _max;
     }
 
 event print2(uint num);
+event print3(string s,uint nummy);
+event print4(address _addy);
     /**
     * @dev Selects validators
     * @param _reset true to delete existing validators and re-selected
@@ -336,42 +338,34 @@ event print2(uint num);
     function selectNewValidators(TellorStorage.TellorStorageStruct storage self, bool _reset) public{
         if(_reset){
             self.selectedValidators.length = 0;
-        }
-        emit print2(1);
-        
+        }   
         uint j=0;
-        //uint i=0;
+        uint i=0;
+        uint r;
         address potentialValidator;
-        emit print2(2);
-//         while(j < 5){
-            emit print2(3);
-            //potentialValidator = self.stakers[randomnumber(self,self.stakers.length,0)];
-            emit print2(4);
-/*            if(self.selectedValidators.length == 0){
-               emit  print2(5);
+         while(j < 5){
+            i++;
+            emit print2(self.stakers.length);
+            r = randomnumber(self,self.stakers.length,i);
+            emit print2(r);
+            potentialValidator = self.stakers[r];
+            emit print4(potentialValidator);
+            emit print3("validators",self.selectedValidators.length);
+            if(self.selectedValidators.length == 0){
                     self.selectedValidators.push(potentialValidator);
                     emit NewValidatorsSelected(potentialValidator);
                     self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
-                    emit print2(6);
                     j++; 
-            }*/
-/*            else{
-                for(uint k=0;k<self.selectedValidators.length;k++){
-                   emit  print2(7);
-                    if(potentialValidator != self.selectedValidators[k]){
-                        emit print2(8);
-                        self.selectedValidators.push(potentialValidator);
-                        emit print2(9);
-                        emit NewValidatorsSelected(potentialValidator);
-                        self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
-                        emit print2(10);
-                        j++;
-                   }
-                }
-            }*/
-//        }
-        emit print2(11);
-        self.uintVars[keccak256("lastSelected")] = now;
+            }
+            else{ //do we loop through and remove validValidator after block?
+                if(!self.validValidator[potentialValidator]){
+                    self.selectedValidators.push(potentialValidator);
+                    emit NewValidatorsSelected(potentialValidator);
+                    self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
+                    j++;
+               }
+            }
+       }
+         self.uintVars[keccak256("lastSelected")] = now;
     }
-
 }
