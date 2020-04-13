@@ -328,9 +328,6 @@ library TellorLibrary {
         return  uint(keccak256(abi.encodePacked(_nonce,now,self.uintVars[keccak256("totalTip")],msg.sender,block.difficulty,self.stakers.length))) % _max;
     }
 
-event print2(uint num);
-event print3(string s,uint nummy);
-event print4(address _addy);
     /**
     * @dev Selects validators
     * @param _reset true to delete existing validators and re-selected
@@ -345,12 +342,8 @@ event print4(address _addy);
         address potentialValidator;
          while(j < 5){
             i++;
-            emit print2(self.stakers.length);
             r = randomnumber(self,self.stakers.length,i);
-            emit print2(r);
             potentialValidator = self.stakers[r];
-            emit print4(potentialValidator);
-            emit print3("validators",self.selectedValidators.length);
             if(self.selectedValidators.length == 0){
                     self.selectedValidators.push(potentialValidator);
                     emit NewValidatorsSelected(potentialValidator);
