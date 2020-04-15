@@ -29,8 +29,8 @@ library TellorLibrary {
     event NewRequestOnDeck(uint256 indexed _requestId, uint256 _onDeckTotalTips);
     //Emits upon a successful Mine, indicates the blocktime at point of the mine and the value mined
     event NewValue(uint256 indexed _requestId, uint256 _time, uint256 _value, uint256 _totalTips, bytes32 _currentChallenge);
-    //Emits upon each mine (5 total) and shows the miner, nonce, and value submitted
-    event NonceSubmitted(address indexed _miner, string _nonce, uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
+    //Emits upon each mine (5 total) and shows the miner, and value submitted
+    event SolutionSubmitted(address indexed _miner,  uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
     event NewValidatorsSelected(address _validator);
 
     
@@ -68,10 +68,9 @@ library TellorLibrary {
      /**
     * @dev This fucntion is called by submitMiningSolution and adjusts the difficulty, sorts and stores the first
     * 5 values received, pays the miners, the dev share and assigns a new challenge
-    * @param _nonce or solution for the PoW  for the requestId
     * @param _requestId for the current request being mined
     */
-    function newBlock(TellorStorage.TellorStorageStruct storage self, string memory _nonce, uint256 _requestId) internal {
+    function newBlock(TellorStorage.TellorStorageStruct storage self, uint256 _requestId) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
         selectNewValidators(self,true);
@@ -162,7 +161,7 @@ library TellorLibrary {
             //gets the max tip in the in the requestQ[51] array and its index within the array??
             uint256 newRequestId = TellorGettersLibrary.getTopRequestID(self);
             //Issue the the next challenge
-            self.currentChallenge = keccak256(abi.encodePacked(_nonce, self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
+            self.currentChallenge = keccak256(abi.encodePacked(self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
             emit NewChallenge(
                 self.currentChallenge,
                 _topId,
@@ -182,11 +181,10 @@ library TellorLibrary {
 
     /**
     * @dev Proof of work is called by the miner when they submit the solution (proof of work and value)
-    * @param _nonce uint submitted by miner
     * @param _requestId the apiId being mined
     * @param _value of api query
     */
-    function submitMiningSolution(TellorStorage.TellorStorageStruct storage self, string memory _nonce, uint256 _requestId, uint256 _value)
+    function submitMiningSolution(TellorStorage.TellorStorageStruct storage self, uint256 _requestId, uint256 _value)
         public
     {
         //requre miner is staked
@@ -197,18 +195,6 @@ library TellorLibrary {
         
         //Check the validator submitting data is one of the selected validators
         require(self.validValidator[msg.sender] == true, "Not a selected validator");
-
-
-        //Saving the challenge information as unique by using the msg.sender
-        require(
-            uint256(
-                sha256(abi.encodePacked(ripemd160(abi.encodePacked(keccak256(abi.encodePacked(self.currentChallenge, msg.sender, _nonce))))))
-            ) %
-                self.uintVars[keccak256("difficulty")] ==
-                0,
-            "Challenge information is not saved"
-        );
-
         //Make sure the miner does not submit a value more than once
         require(self.minersByChallenge[self.currentChallenge][msg.sender] == false, "Miner already submitted the value");
 
@@ -222,11 +208,11 @@ library TellorLibrary {
         //Update the miner status to true once they submit a value so they don't submit more than once
         self.minersByChallenge[self.currentChallenge][msg.sender] = true;
 
-        emit NonceSubmitted(msg.sender, _nonce, _requestId, _value, self.currentChallenge);
+        emit SolutionSubmitted(msg.sender, _requestId, _value, self.currentChallenge);
 
         //If 5 values have been received, adjust the difficulty otherwise sort the values until 5 are received
         if (self.uintVars[keccak256("slotProgress")] == 5) {
-            newBlock(self, _nonce, _requestId);
+            newBlock(self, _requestId);
         }
 
 

@@ -28,7 +28,6 @@ library TellorTransfer {
     */
     function doTransfer(TellorStorage.TellorStorageStruct storage self, address _from, address _to, uint256 _amount) internal {
         require(_amount > 0, "Tried to send non-positive amount");
-        require(_to != address(0), "Receiver is 0 address");
         uint256 previousBalance;
         if(_from != address(this)){
             require(balanceOf(self, _from).sub(_amount) >= 0, "Stake amount was not removed from balance");        

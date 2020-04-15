@@ -26,9 +26,10 @@ contract('Further Tests', function(accounts) {
    });  
 	it("Request data", async function () {
 		await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
-        let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
-        console.log(res2);
-        let res = await web3.eth.abi.decodeParameters(['string','string','uint256','uint256'],res2.logs[2].data);
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(2,20,{from:accounts[0],gas:2000000})
+        console.log(res2.logs[1].args);
+        let res = await web3.eth.abi.decodeParameters(['uint256','uint256'],res2.logs[1].args);
         let resSapi = res['0']
 		let resApiId = await web3.eth.abi.decodeParameter('uint256',res2.logs[2].topics[2])
         apiVars = await oracle.getRequestVars(resApiId);
@@ -40,6 +41,12 @@ contract('Further Tests', function(accounts) {
         assert(web3.utils.hexToNumberString(apiIdonQ) == resApiId, "timestamp on Q should be apiID");
         vars = await oracle.getRequestVars(2);
     });
+        it("Add Tip to current ID", async function () {
+        await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+    });
+
     /*it("several request data", async function () {
         test1 = "https://api.gdax.com/products/ETH-USD/ticker";
         test2 = "https://api.gdax.com/products/BTC-USD/ticker";
