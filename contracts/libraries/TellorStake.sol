@@ -36,29 +36,27 @@ library TellorStake {
     function requestStakingWithdrawInternal(TellorStorage.TellorStorageStruct storage self,address _party, uint _amount) internal {
         emit print(0);
         TellorStorage.StakeInfo storage stakes = self.stakerDetails[_party];
-        emit print(10);
-        uint minimumStake = self.uintVars[keccak256("minimumStake")];
         //Require that the miner is staked
         emit print(1);
         require(stakes.currentStatus == 1, "Miner is not staked");
         emit print(2);
-        require(_amount % minimumStake == 0, "Must be divisible by minimumStake");
+        require(_amount % self.uintVars[keccak256("minimumStake")] == 0, "Must be divisible by minimumStake");
         emit print(3);
         require(_amount <= TellorTransfer.balanceOf(self,_party));
         emit print(4);
-        for(uint i=0; i <= _amount / minimumStake; i++) {
+        for(uint i=0; i <= _amount / self.uintVars[keccak256("minimumStake")]; i++) {
             removeFromStakerArray(self, stakes.stakePosition[i],_party);
-        emit print(5);
+            emit print(5);
         }
-emit print(6);
-       //Change the miner staked to locked to be withdrawStake
-        if (TellorTransfer.balanceOf(self,_party) == 0){
-            stakes.currentStatus = 2;
-            self.uintVars[keccak256("stakerCount")] -= 1;
-        }
-        stakes.withdrawDate = now - (now % 86400);
-        stakes.withdrawAmount = _amount;
-        emit StakeWithdrawRequested(_party);
+       //  emit print(6);
+       // //Change the miner staked to locked to be withdrawStake
+       //  if (TellorTransfer.balanceOf(self,_party) == 0){
+       //      stakes.currentStatus = 2;
+       //      self.uintVars[keccak256("stakerCount")] -= 1;
+       //  }
+       //  stakes.withdrawDate = now - (now % 86400);
+       //  stakes.withdrawAmount = _amount;
+       //  emit StakeWithdrawRequested(_party);
     }
 
     /**
@@ -105,7 +103,7 @@ emit print(6);
         require(_amount % self.uintVars[keccak256("minimumStake")] == 0, "Must be divisible by minimumStake");
         for(uint i=0; i < _amount / self.uintVars[keccak256("minimumStake")]; i++){
             self.stakerDetails[msg.sender].stakePosition.push(self.stakers.length);
-            self.stakerDetails[msg.sender].stakePositionArrayIndex[self.stakers.length] = i;
+            //self.stakerDetails[msg.sender].stakePositionArrayIndex[self.stakerDetails[msg.sender].stakerPosition.length] = self.stakers.length;
             self.stakers.push(msg.sender);
         }
         self.stakerDetails[msg.sender].currentStatus = 1;
@@ -124,32 +122,14 @@ emit print(6);
         address lastAdd;
         //uint lastIndex;
         if(_pos == self.stakers.length-1){
-             self.stakers.length--;
-            uint localIndex = self.stakerDetails[_staker].stakePositionArrayIndex[_pos];
-            if(localIndex == self.stakerDetails[msg.sender].stakePosition.length){
-                self.stakerDetails[msg.sender].stakePosition.length--;
-            }
-            else{
-                uint lastLocal= self.stakerDetails[msg.sender].stakePosition.length-1;
-                self.stakerDetails[msg.sender].stakePosition[localIndex] = lastLocal;
-                self.stakerDetails[_staker].stakePositionArrayIndex[_pos] = 0; //fix so not zero
-            }
+            self.stakers.length--;
+            self.stakerDetails[msg.sender].stakePosition.length--;
         }
         else{
             lastAdd = self.stakers[self.stakers.length-1];
             self.stakers[_pos] = lastAdd;
             self.stakers.length--;
-            uint localIndex = self.stakerDetails[_staker].stakePositionArrayIndex[_pos];
-            if(localIndex == self.stakerDetails[msg.sender].stakePosition.length){
-                self.stakerDetails[msg.sender].stakePosition.length--;
-            }
-            else{
-                //uint lastLocal= self.stakerDetails[msg.sender]['stakePosition'][length-1];
-                uint lastLocal= self.stakerDetails[msg.sender].stakePosition.length-1;
-                self.stakerDetails[msg.sender].stakePosition[localIndex] = lastLocal;
-                self.stakerDetails[_staker].stakePositionArrayIndex[_pos] = 0; //fix so not zero
-
-            }
+            self.stakerDetails[msg.sender].stakePosition.length--;
         }
     }
 }

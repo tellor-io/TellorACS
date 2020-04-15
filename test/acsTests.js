@@ -27,7 +27,7 @@ contract('ACS specific Tests', function(accounts) {
    });  
 
    it("change Tellor Contract", async function () {
-    assert(await oracle.getAddressVars(web3.utils.keccak256("_deity") == accounts[0]))
+    assert(await oracle.getAddressVars(web3.utils.keccak256("_deity")) == accounts[0])
     assert(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")) == tellorToken.address, "token address should be correct")
     let newToken = await ERC20.new()
     await oracle.changeTellorToken(newToken.address);

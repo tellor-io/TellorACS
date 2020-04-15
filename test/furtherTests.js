@@ -8,11 +8,11 @@ const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts
 var ERC20 = artifacts.require("./ERC20.sol");
 var oracleAbi = Tellor.abi;
 
-contract('ACS specific Tests', function(accounts) {
+contract('Further Tests', function(accounts) {
   let oracle;
   let tellorToken;
 
-    beforeEach('Further Tests', async function () {
+    beforeEach('setting up further tests', async function () {
         tellorToken = await ERC20.new();
         for(var i = 0;i<10;i++){
           await tellorToken.mint(accounts[i],web3.utils.toWei('200','ether'));
@@ -25,6 +25,7 @@ contract('ACS specific Tests', function(accounts) {
         await oracle.addTip(1,0,{from:accounts[0],gas:2000000})
    });  
 	it("Request data", async function () {
+		await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
         let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
         console.log(res2);
         let res = await web3.eth.abi.decodeParameters(['string','string','uint256','uint256'],res2.logs[2].data);

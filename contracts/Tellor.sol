@@ -29,6 +29,7 @@ contract Tellor is TellorGetters{
         tellor.uintVars[keccak256("minimumStake")] = 100e18;
         tellor.addressVars[keccak256("_deity")] = msg.sender;
         tellor.addressVars[keccak256("tellorToken")] = _tellorToken;
+        tellor.stakers.push(address(0));
         emit NewTellorToken(tellor.addressVars[keccak256("tellorToken")]);
         emit NewTellorToken(_tellorToken);
     }
