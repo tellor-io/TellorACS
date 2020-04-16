@@ -94,24 +94,6 @@ library TellorLibrary {
                         a[j].miner = temp2;
                     }
                 }
-
-        //keep track of selected miners that submitted a value.
-        //and increase missed calls
-           uint256 b;
-           for (b = 1; b < 5; b++) {
-                address temp3 = self.selectedValidators[b];
-                if (self.validValidator[temp3] == true){
-                    self.missedCalls[temp3]++;
-                    reselectNewValidators(self);
-                    if (self.missedCalls[temp3] == 5){
-                        TellorStake.requestStakingWithdrawInternal(self,temp3,TellorTransfer.balanceOf(self,temp3));
-                    }
-                }
-           }
-
-
-
-
         //Pay the miners
         for (i = 0; i < 5; i++) {
             tellorToken.transfer(a[i].miner, self.uintVars[keccak256("currentTotalTips")] / 5);
@@ -214,23 +196,8 @@ library TellorLibrary {
         if (self.uintVars[keccak256("slotProgress")] == 5) {
             newBlock(self, _requestId);
         }
-
-
-        //keep track of selected miners that submitted a value.
-        //and increase missed calls for those who didn't
-           uint256 b;
-           for (b = 1; b < 5; b++) {
-                address temp3 = self.selectedValidators[b];
-                if (self.validValidator[temp3] == true){
-                    reselectNewValidators(self);
-                    self.missedCalls[temp3]++;
-                    self.validValidator[temp3] == false;
-                }
-           }
-
         //Once a validator submits data set their status back to false
         self.validValidator[msg.sender] == false;
-
     }
 
 
@@ -326,11 +293,11 @@ library TellorLibrary {
         uint i=0;
         uint r;
         address potentialValidator;
-         while(j < 5){
+         while(j < 5 && self.stakers.length > self.selectedValidators.length){
             i++;
             r = randomnumber(self,self.stakers.length,i);
             potentialValidator = self.stakers[r];
-            if(self.selectedValidators.length == 0){
+            if(_reset){
                     self.selectedValidators.push(potentialValidator);
                     emit NewValidatorsSelected(potentialValidator);
                     self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)

@@ -59,11 +59,14 @@ contract('ACS specific Tests', function(accounts) {
    it("test multiple staking one address, dispute and slashing", async function () {
      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
       await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
-      for(var i = 1;i<=5;i++){
-        res = await oracle.submitMiningSolution(1,100,{from:accounts[i]});
+      let miners = await oracle.getCurrentMiners();
+      for(var i = 0;i<5;i++){
+        res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
       }
-      console.log(res)
-      await  oracle.beginDispute(1,res[0],2,{from:accounts[1],gas:2000000});
+      console.log(res.logs[6].args['_time'] - 0)
+      balance1 = await oracle.balanceOf(accounts[2]);
+      dispBal1 = await oracle.balanceOf(accounts[1])
+      await  oracle.beginDispute(1,res.logs[6].args['_time'],2,{from:accounts[1],gas:2000000});
       count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
       await oracle.vote(1,true,{from:accounts[3],gas:2000000})
       await helper.advanceTime(86400 * 22);

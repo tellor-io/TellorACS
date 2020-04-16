@@ -28,28 +28,49 @@ contract('Further Tests', function(accounts) {
 		await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
         await tellorToken.approve(oracle.address,20,{from:accounts[0]});
         let res2 = await oracle.addTip(2,20,{from:accounts[0],gas:2000000})
-        console.log(res2.logs[1].args);
-        let res = await web3.eth.abi.decodeParameters(['uint256','uint256'],res2.logs[1].args);
-        let resSapi = res['0']
-		let resApiId = await web3.eth.abi.decodeParameter('uint256',res2.logs[2].topics[2])
-        apiVars = await oracle.getRequestVars(resApiId);
-        assert( apiVars[5] == 20, "value pool should be 20");
-        res3 = await web3.eth.abi.decodeParameters(['string','bytes32','uint256'],res2.logs[1].data);
-        let apiIdonQ = await web3.eth.abi.decodeParameter('uint256',res2.logs[1].topics[1])
-        let apiOnQPayout = res3['2'];
+        assert(res2.logs[1].args['_tip'] - 0 == 20, "tip should be 20")
+        apiVars = await oracle.getRequestVars(2);
+        assert( apiVars[1] == 20, "value pool should be 20");
+        let apiIdonQ = res2.logs[1].args['_requestId'] - 0
+        let apiOnQPayout = res2.logs[1].args['_tip'] - 0;
         assert(web3.utils.hexToNumberString(apiOnQPayout) == 20, "Current payout on Q should be 20");
-        assert(web3.utils.hexToNumberString(apiIdonQ) == resApiId, "timestamp on Q should be apiID");
-        vars = await oracle.getRequestVars(2);
+        assert(web3.utils.hexToNumberString(apiIdonQ) == 2, "timestamp on Q should be apiID");
     });
         it("Add Tip to current ID", async function () {
         await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
         await tellorToken.approve(oracle.address,20,{from:accounts[0]});
         let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        let vars = await oracle.getCurrentVariables();
+        assert(vars['3'] ==  20)
     });
+        /*
+    it("several request data", async function () {
+        await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        let vars = await oracle.getCurrentVariables();
+        console.log(vars)
+        assert(vars['3'] ==  20)
 
-    /*it("several request data", async function () {
-        test1 = "https://api.gdax.com/products/ETH-USD/ticker";
-        test2 = "https://api.gdax.com/products/BTC-USD/ticker";
+                await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        let vars = await oracle.getCurrentVariables();
+        console.log(vars)
+        assert(vars['3'] ==  20)
+
+                await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        let vars = await oracle.getCurrentVariables();
+        console.log(vars)
+        assert(vars['3'] ==  20)
+
+
+                await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        let vars = await oracle.getCurrentVariables();
+        console.log(vars)
+        assert(vars['3'] ==  20)
+
         let req1 = await web3.eth.sendTransaction({to: oracle.address,from:accounts[2],gas:7000000,data:oracle2.methods.requestData(test1,"ETH/USD",1000,20).encodeABI()})
         onQ = await web3.eth.abi.decodeParameter('uint256',req1.logs[1].topics[1])
         assert(web3.utils.hexToNumberString(onQ) == 2, "should be 2");
@@ -59,7 +80,6 @@ contract('Further Tests', function(accounts) {
        req1 = await web3.eth.sendTransaction({to: oracle.address,from:accounts[2],gas:7000000,data:oracle2.methods.requestData(test1,"ETH/USD",1000,31).encodeABI()})
         onQ = await web3.eth.abi.decodeParameter('uint256',req1.logs[1].topics[1])
        assert(web3.utils.hexToNumberString(onQ) == 2, "should be 2");
-               newOracle = await Tellor.new();
 		req1 = await web3.eth.sendTransaction({to: oracle.address,from:accounts[2],gas:7000000,data:oracle2.methods.requestData(test2,"ETH/USD",1000,60).encodeABI()})
         onQ = await web3.eth.abi.decodeParameter('uint256',req1.logs[1].topics[1])
        assert(web3.utils.hexToNumberString(onQ) == 4, "should be 4");
