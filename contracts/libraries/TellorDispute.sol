@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./TellorStorage.sol";
 import "./TellorTransfer.sol";
-//import "./SafeMath.sol";
+import "../interfaces/TokenInterface.sol";
 
 /**
 * @title Tellor Dispute
@@ -34,7 +34,7 @@ library TellorDispute {
     function beginDispute(TellorStorage.TellorStorageStruct storage self, uint256 _requestId, uint256 _timestamp, uint256 _minerIndex) public {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         //require that no more than a day( (24 hours * 60 minutes)/10minutes=144 blocks) has gone by since the value was "mined"
-        require(now - _timestamp <= 1 days, "The value was mined more than a day ago");
+        //require(now - _timestamp <= 1 days, "The value was mined more than a day ago");
         require(_request.minedBlockNum[_timestamp] > 0, "Mined block is 0");
         require(_minerIndex < 5, "Miner index is wrong");
 
