@@ -192,7 +192,7 @@ library TellorDispute {
                     TellorTransfer.doTransfer(self, disp.reportedMiner, disp.reportingParty, self.uintVars[keccak256("stakeAmount")]);
      
                     TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
-                    tellorToken.transfer(disp.reportingParty,self.uintVars[keccak256("stakeAmount") + disp.disputeUintVars[keccak256("fee")]]);
+                    tellorToken.transfer(disp.reportingParty,self.uintVars[keccak256("stakeAmount")] + disp.disputeUintVars[keccak256("fee")]);
 
                     updateDisputeFee(self, _disputeId);
                 //if reported miner stake was already slashed, return the fee to other reporting paties

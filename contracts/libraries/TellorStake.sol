@@ -33,22 +33,22 @@ library TellorStake {
     * can withdraw the deposit
     */
 
-    function requestStakingWithdrawInternal(TellorStorage.TellorStorageStruct storage self,address _party, uint _amount) internal {
-        TellorStorage.StakeInfo storage stakes = self.stakerDetails[_party];
+    function requestStakingWithdrawInternal(TellorStorage.TellorStorageStruct storage self,address _staker, uint _amount) internal {
+        TellorStorage.StakeInfo storage stakes = self.stakerDetails[_staker];
         require(stakes.currentStatus == 1, "Miner is not staked");
         require(_amount % self.uintVars[keccak256("minimumStake")] == 0, "Must be divisible by minimumStake");
-        require(_amount <= TellorTransfer.balanceOf(self,_party));
+        require(_amount <= TellorTransfer.balanceOf(self,_staker));
         for(uint i=0; i < _amount / self.uintVars[keccak256("minimumStake")]; i++) {
-            removeFromStakerArray(self, stakes.stakePosition[i],_party);
+            removeFromStakerArray(self, stakes.stakePosition[i],_staker);
         }
        //Change the miner staked to locked to be withdrawStake
-        if (TellorTransfer.balanceOf(self,_party) == 0){
+        if (TellorTransfer.balanceOf(self,_staker) == 0){
             stakes.currentStatus = 2;
             self.uintVars[keccak256("stakerCount")] -= 1;
         }
         stakes.withdrawDate = now - (now % 86400);
         stakes.withdrawAmount = _amount;
-        emit StakeWithdrawRequested(_party);
+        emit StakeWithdrawRequested(_staker);
     }
 
     /**
@@ -115,13 +115,13 @@ library TellorStake {
         //uint lastIndex;
         if(_pos == self.stakers.length-1){
             self.stakers.length--;
-            self.stakerDetails[msg.sender].stakePosition.length--;
+            self.stakerDetails[_staker].stakePosition.length--;
         }
         else{
             lastAdd = self.stakers[self.stakers.length-1];
             self.stakers[_pos] = lastAdd;
             self.stakers.length--;
-            self.stakerDetails[msg.sender].stakePosition.length--;
+            self.stakerDetails[_staker].stakePosition.length--;
         }
     }
 }
