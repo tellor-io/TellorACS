@@ -45,7 +45,23 @@ library TellorDispute {
 
         //Ensures that a dispute is not already open for the that miner, requestId and timestamp
         require(self.disputeIdByDisputeHash[_hash] == 0, "Dispute is already open");
-        TellorTransfer.doTransfer(self, msg.sender, address(this), self.uintVars[keccak256("disputeFee")]);
+
+        //????should the fee come from main tellor--ERC20
+        //old way???:
+        //TellorTransfer.doTransfer(self, msg.sender, address(this), self.uintVars[keccak256("disputeFee")]);
+
+        //New way???
+        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
+        if (self.stakerDetails[_miner].currentStatus > 0){
+            require(tellorToken.balanceOf(msg.sender)-self.uintVars[keccak256("stakeAmount")] >= self.uintVars[keccak256("disputeFee")], "Balance is lower than stake amount");
+            require(tellorToken.allowance(msg.sender,address(this)) >= self.uintVars[keccak256("disputeFee")]+self.uintVars[keccak256("stakeAmount")], "Proper amount must be allowed to this contract");
+            tellorToken.transferFrom(msg.sender, address(this), self.uintVars[keccak256("disputeFee")]);
+        } else {
+            require(tellorToken.balanceOf(msg.sender) >= self.uintVars[keccak256("disputeFee")], "Balance is lower than stake amount");
+            require(tellorToken.allowance(msg.sender,address(this)) >= self.uintVars[keccak256("disputeFee")], "Proper amount must be allowed to this contract");
+            tellorToken.transferFrom(msg.sender, address(this), self.uintVars[keccak256("disputeFee")]);
+        }   
+
 
         //Increase the dispute count by 1
         self.uintVars[keccak256("disputeCount")] = self.uintVars[keccak256("disputeCount")] + 1;
@@ -93,7 +109,23 @@ library TellorDispute {
         TellorStorage.Dispute storage disp = self.disputesById[_disputeId];
 
         //Get the voteWeight or the balance of the user at the time/blockNumber the disupte began
+        
         uint256 voteWeight = TellorTransfer.balanceOfAt(self, msg.sender, disp.disputeUintVars[keccak256("blockNumber")]);
+
+///Add mini token--but would that be available on bridge???--use staking better???
+/*        uint256 voteWeight;
+        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
+        if (self.stakerDetails[msg.sender].currentStatus > 0){
+            voteWeight = TellorTransfer.balanceOfAt(self, msg.sender, disp.disputeUintVars[keccak256("blockNumber")]) +
+            tellorToken.balanceOf(msg.sender);
+
+        } else {
+            voteWeight = tellorToken.balanceOf(msg.sender);///do I need a balanceOfAt for the Erc20
+        }   
+*/
+
+
+
 
         //Require that the msg.sender has not voted
         require(disp.voted[msg.sender] != true, "Sender has already voted");

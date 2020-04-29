@@ -76,6 +76,10 @@ library TellorLibrary {
         selectNewValidators(self,true);
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
+
+        //update last report date for staker
+        self.stakerDetails[msg.sender].lastReportDate = _timeOfLastNewValue;
+
         //The sorting algorithm that sorts the values of the first five values that come in
         TellorStorage.Details[5] memory a = self.currentMiners;
         
@@ -184,11 +188,14 @@ library TellorLibrary {
         self.currentMiners[self.uintVars[keccak256("slotProgress")]].value = _value;
         self.currentMiners[self.uintVars[keccak256("slotProgress")]].miner = msg.sender;
 
+
         //Add to the count how many values have been submitted, since only 5 are taken per request
         self.uintVars[keccak256("slotProgress")]++;
 
         //Update the miner status to true once they submit a value so they don't submit more than once
         self.minersByChallenge[self.currentChallenge][msg.sender] = true;
+
+
 
         emit SolutionSubmitted(msg.sender, _requestId, _value, self.currentChallenge);
 

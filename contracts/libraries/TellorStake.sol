@@ -59,23 +59,28 @@ library TellorStake {
         //Require the staker has locked for withdraw(currentStatus ==2) and that 7 days have
         //passed by since they locked for withdraw
         require(now - (now % 86400) - stakes.withdrawDate >= 7 days, "7 days didn't pass");
-        require(stakes.currentStatus !=3 , "Miner was not locked for withdrawal");
-        TellorTransfer.doTransfer(self,msg.sender,address(0),stakes.withdrawAmount);
-        if (TellorTransfer.balanceOf(self,msg.sender) == 0){
-            stakes.currentStatus =0 ;
-            self.uintVars[keccak256("stakerCount")] -= 1;
-            self.uintVars[keccak256("uniqueStakers")] -= 1;
+        require(stakes.currentStatus !=3 , "Miner is under dispute");
+
+        if (now - (now % 86400) - stakes.lastReportDate >= 7 days){
+            TellorTransfer.doTransfer(self,msg.sender,address(0),stakes.withdrawAmount);
+            if (TellorTransfer.balanceOf(self,msg.sender) == 0){
+                stakes.currentStatus =0 ;
+                self.uintVars[keccak256("stakerCount")] -= 1;
+                self.uintVars[keccak256("uniqueStakers")] -= 1;
+            }
+            self.uintVars[keccak256("totalStaked")] -= stakes.withdrawAmount;
+            TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
+            tellorToken.transfer(msg.sender,stakes.withdrawAmount);
+            emit StakeWithdrawn(msg.sender);
         }
-        self.uintVars[keccak256("totalStaked")] -= stakes.withdrawAmount;
-        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
-        tellorToken.transfer(msg.sender,stakes.withdrawAmount);
-        emit StakeWithdrawn(msg.sender);
     }
 
     /**
     * @dev This function allows miners to deposit their stake.
+    * @param _amount is the amount to be staked
+    * @param _stakeType use 0 for voting and 1 for mining
     */
-    function depositStake(TellorStorage.TellorStorageStruct storage self, uint _amount) public {
+    function depositStake(TellorStorage.TellorStorageStruct storage self, uint _amount,uint _stakeType) public {
        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
         require(tellorToken.balanceOf(msg.sender) >= _amount, "Balance is lower than stake amount");
@@ -83,7 +88,11 @@ library TellorStake {
         tellorToken.transferFrom(msg.sender, address(this), _amount);
         //Ensure they can only stake if they are not currrently staked or if their stake time frame has ended
         //and they are currently locked for witdhraw
+
+        //??? what is this, status 3 is under dispute??? So if they are under dispute, they can't stake more?
         require(self.stakerDetails[msg.sender].currentStatus != 3, "Miner is in the wrong state");
+
+        //if this is the first time this addres stakes count, then add them to the stake count
         if(TellorTransfer.balanceOf(self,msg.sender) == 0){
             self.uintVars[keccak256("stakerCount")] += 1;
         }
