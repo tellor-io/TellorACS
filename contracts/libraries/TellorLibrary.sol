@@ -77,8 +77,6 @@ library TellorLibrary {
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
 
-        //update last report date for staker
-        self.stakerDetails[msg.sender].lastReportDate = _timeOfLastNewValue;
 
         //The sorting algorithm that sorts the values of the first five values that come in
         TellorStorage.Details[5] memory a = self.currentMiners;

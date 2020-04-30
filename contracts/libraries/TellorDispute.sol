@@ -110,10 +110,11 @@ library TellorDispute {
 
         //Get the voteWeight or the balance of the user at the time/blockNumber the disupte began
         
-        uint256 voteWeight = TellorTransfer.balanceOfAt(self, msg.sender, disp.disputeUintVars[keccak256("blockNumber")]);
+        //old way ??? Delete once the mini token is implemented
+        //uint256 voteWeight = TellorTransfer.balanceOfAt(self, msg.sender, disp.disputeUintVars[keccak256("blockNumber")]);
 
-///Add mini token--but would that be available on bridge???--use staking better???
-/*        uint256 voteWeight;
+  ///Add mini token--but would that be available on bridge???
+        uint256 voteWeight;
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
         if (self.stakerDetails[msg.sender].currentStatus > 0){
             voteWeight = TellorTransfer.balanceOfAt(self, msg.sender, disp.disputeUintVars[keccak256("blockNumber")]) +
@@ -122,9 +123,6 @@ library TellorDispute {
         } else {
             voteWeight = tellorToken.balanceOf(msg.sender);///do I need a balanceOfAt for the Erc20
         }   
-*/
-
-
 
 
         //Require that the msg.sender has not voted
@@ -238,7 +236,8 @@ library TellorDispute {
 
    /**
     * @dev this function allows the dispute fee to fluctuate based on the number of miners on the system.
-    * The floor for the fee is 15e18.
+    * The floor for the fee is 15e18. The fee dobules with each dispute round and 
+    * @param disputeId is the dispute Id for to update the fee for
     */
     function updateDisputeFee(TellorStorage.TellorStorageStruct storage self, uint disputeId) public {
         self.disputesById[disputeId].disputeUintVars[keccak256("DisputeRound")]++;

@@ -61,7 +61,7 @@ library TellorStake {
         require(now - (now % 86400) - stakes.withdrawDate >= 7 days, "7 days didn't pass");
         require(stakes.currentStatus !=3 , "Miner is under dispute");
 
-        if (now - (now % 86400) - stakes.lastReportDate >= 7 days){
+        
             TellorTransfer.doTransfer(self,msg.sender,address(0),stakes.withdrawAmount);
             if (TellorTransfer.balanceOf(self,msg.sender) == 0){
                 stakes.currentStatus =0 ;
@@ -72,15 +72,14 @@ library TellorStake {
             TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             tellorToken.transfer(msg.sender,stakes.withdrawAmount);
             emit StakeWithdrawn(msg.sender);
-        }
+        
     }
 
     /**
     * @dev This function allows miners to deposit their stake.
     * @param _amount is the amount to be staked
-    * @param _stakeType use 0 for voting and 1 for mining
     */
-    function depositStake(TellorStorage.TellorStorageStruct storage self, uint _amount,uint _stakeType) public {
+    function depositStake(TellorStorage.TellorStorageStruct storage self, uint _amount) public {
        TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
         require(tellorToken.balanceOf(msg.sender) >= _amount, "Balance is lower than stake amount");
@@ -116,6 +115,8 @@ library TellorStake {
         //self.totalStaked += _amount;
         self.uintVars[keccak256("totalStaked")]  += _amount;
         emit NewStake(msg.sender);
+
+        
     }
 
 

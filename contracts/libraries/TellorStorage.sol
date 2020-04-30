@@ -40,7 +40,6 @@ library TellorStorage {
         uint256 startDate; //stake start date
         uint256 withdrawDate;
         uint256 withdrawAmount;
-        uint256 lastReportDate;//??? or a mapping? 
         uint[] stakePosition;
         mapping(uint => uint) stakePositionArrayIndex;
     }
