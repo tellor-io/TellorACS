@@ -93,11 +93,11 @@ contract ERC20 {
         if(recipient != address(this)){
             require(balanceOf(sender).sub(amount) >= 0, "Stake amount was not removed from balance");        
             previousBalance = balanceOfAt(sender, block.number);
-            updateBalanceAtNow(_balances[sender], previousBalance - amount);
+            updateBalanceAtNow(sender, previousBalance - amount);
         }
         previousBalance = balanceOfAt(recipient, block.number);
         require(previousBalance + amount >= previousBalance, "Overflow happened"); // Check for overflow
-        updateBalanceAtNow(_balances[recipient], previousBalance + amount);
+        updateBalanceAtNow(recipient, previousBalance + amount);
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
@@ -111,7 +111,7 @@ contract ERC20 {
 
         uint256 previousBalance = balanceOfAt(account, block.number);
         require(previousBalance + amount >= previousBalance, "Overflow happened"); // Check for overflow
-        updateBalanceAtNow(_balances[account], previousBalance + amount);
+        updateBalanceAtNow(account, previousBalance + amount);
         _totalSupply = _totalSupply.add(amount);
         emit Transfer(address(0), account, amount);
     }
@@ -129,7 +129,7 @@ contract ERC20 {
 
         uint256 previousBalance = balanceOfAt(account, block.number);
         require(previousBalance - amount <= previousBalance, "Underflow happened"); // Check for overflow
-        updateBalanceAtNow(_balances[account], previousBalance - amount);
+        updateBalanceAtNow(account, previousBalance - amount);
         _totalSupply = _totalSupply.sub(amount);
 
         emit Transfer(account, address(0), amount);
@@ -163,17 +163,18 @@ contract ERC20 {
         if ((_balances[account].length == 0) || (_balances[account][0].fromBlock > blockNumber)) {
             return 0;
         } else {
-            return getBalanceAt(_balances[account], blockNumber);
+            return getBalanceAt(account, blockNumber);
         }
     }
 
     /**
     * @dev Getter for balance for owner on the specified _block number
-    * @param checkpoints gets the mapping for the balances[owner]
+    * @param account gets the mapping for the balances[owner]
     * @param _block is the block number to search the balance on
     * @return the balance at the checkpoint
     */
-    function getBalanceAt(Checkpoint[] storage checkpoints, uint256 _block) public view returns (uint256) {
+    function getBalanceAt(address account, uint256 _block) public view returns (uint256) {
+        Checkpoint[] storage checkpoints = _balances[account];
         if (checkpoints.length == 0) return 0;
         if (_block >= checkpoints[checkpoints.length - 1].fromBlock) return checkpoints[checkpoints.length - 1].value;
         if (_block < checkpoints[0].fromBlock) return 0;
@@ -193,12 +194,13 @@ contract ERC20 {
 
     /**
     * @dev Updates balance for from and to on the current block number via doTransfer
-    * @param checkpoints gets the mapping for the balances[owner]
+    * @param account gets the mapping for the balances[owner]
     * @param value is the new balance
     */
-    function updateBalanceAtNow(Checkpoint[] storage checkpoints, uint256 value) public {
+    function updateBalanceAtNow(address account, uint256 value) public {
+        Checkpoint[] storage checkpoints = _balances[account];
         if ((checkpoints.length == 0) || (checkpoints[checkpoints.length - 1].fromBlock < block.number)) {
-            self.Checkpoint storage newCheckPoint = checkpoints[checkpoints.length++];
+            Checkpoint storage newCheckPoint = checkpoints[checkpoints.length++];
             newCheckPoint.fromBlock = uint128(block.number);
             newCheckPoint.value = uint128(value);
         } else {
