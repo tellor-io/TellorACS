@@ -8,8 +8,8 @@ import "./libraries/SafeMath.sol";
 contract ERC20 {
     using SafeMath for uint256;
 
-    mapping (address => Checkpoint[]) private _balances;
-    mapping (address => mapping (address => uint256)) private _allowances;
+    mapping (address => Checkpoint[]) public _balances;
+    mapping (address => mapping (address => uint256)) public _allowances;
     uint256 private _totalSupply;
 
     //Internal struct to allow balances to be queried by blocknumber for voting purposes
