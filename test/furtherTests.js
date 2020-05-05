@@ -1,90 +1,101 @@
-// /** 
-// * This contract tests the Tellor functions
-// */ 
-// const Web3 = require('web3')
-// const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8545'));
-// const helper = require("./helpers/test_helpers");
-// const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
-// var ERC20 = artifacts.require("./ERC20.sol");
-// var oracleAbi = Tellor.abi;
+/** 
+* This contract tests the Tellor functions
+*/ 
+const Web3 = require('web3')
+const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8545'));
+const helper = require("./helpers/test_helpers");
+const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
+var ERC20 = artifacts.require("./ERC20.sol");
+var oracleAbi = Tellor.abi;
 
-// contract('Further Tests', function(accounts) {
-//   let oracle;
-//   let tellorToken;
+contract('Further Tests', function(accounts) {
+  let oracle;
+  let tellorToken;
 
-//     beforeEach('setting up further tests', async function () {
-//         tellorToken = await ERC20.new();
-//         for(var i = 0;i<10;i++){
-//           await tellorToken.mint(accounts[i],web3.utils.toWei('200','ether'));
-//         }
-//         oracle = await Tellor.new(tellorToken.address);
-//         for(var i = 0;i<5;i++){
-//           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
-//           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
-//         }
-//         await oracle.addTip(1,0,{from:accounts[0],gas:2000000})
-//    });  
-// 	it("Request data", async function () {
-// 		await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
-//         await tellorToken.approve(oracle.address,20,{from:accounts[0]});
-//         let res2 = await oracle.addTip(2,20,{from:accounts[0],gas:2000000})
-//         assert(res2.logs[1].args['_tip'] - 0 == 20, "tip should be 20")
-//         apiVars = await oracle.getRequestVars(2);
-//         assert( apiVars[1] == 20, "value pool should be 20");
-//         let apiIdonQ = res2.logs[1].args['_requestId'] - 0
-//         let apiOnQPayout = res2.logs[1].args['_tip'] - 0;
-//         assert(web3.utils.hexToNumberString(apiOnQPayout) == 20, "Current payout on Q should be 20");
-//         assert(web3.utils.hexToNumberString(apiIdonQ) == 2, "timestamp on Q should be apiID");
-//     });
-//         it("Add Tip to current ID", async function () {
-//         await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
-//         await tellorToken.approve(oracle.address,20,{from:accounts[0]});
-//         let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
-//         let vars = await oracle.getCurrentVariables();
-//         assert(vars['3'] ==  20)
-//     });
+    beforeEach('setting up further tests', async function () {
+        tellorToken = await ERC20.new();
+        for(var i = 0;i<10;i++){
+          await tellorToken.mint(accounts[i],web3.utils.toWei('200','ether'));
+        }
+        oracle = await Tellor.new(tellorToken.address);
+        for(var i = 0;i<5;i++){
+          await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
+          await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
+        }
+        await oracle.addTip(1,0,{from:accounts[0],gas:2000000})
+   });  
+	it("Request data", async function () {
+		await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(2,20,{from:accounts[0],gas:2000000})
+        assert(res2.logs[1].args['_tip'] - 0 == 20, "tip should be 20")
+        apiVars = await oracle.getRequestVars(2);
+        assert( apiVars[1] == 20, "value pool should be 20");
+        let apiIdonQ = res2.logs[1].args['_requestId'] - 0
+        let apiOnQPayout = res2.logs[1].args['_tip'] - 0;
+        assert(web3.utils.hexToNumberString(apiOnQPayout) == 20, "Current payout on Q should be 20");
+        assert(web3.utils.hexToNumberString(apiIdonQ) == 2, "timestamp on Q should be apiID");
+    });
+        it("Add Tip to current ID", async function () {
+        await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        let vars = await oracle.getCurrentVariables();
+        assert(vars['3'] ==  20)
+    });
         
-//     it("several request data", async function () {
-//         await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
-//         await tellorToken.approve(oracle.address,20,{from:accounts[0]});
-//         let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
-//         let vars = await oracle.getCurrentVariables();
-//         console.log(vars)
-//         assert(vars['3'] ==  20)
+    it("several request data", async function () {
+        await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        let vars = await oracle.getCurrentVariables();
+        //console.log(vars)
+        assert(vars['3'] ==  20, "should be 20")
 
-//                 await tellorToken.approve(oracle.address,20,{from:accounts[0]});
-//         let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
-//         let vars = await oracle.getCurrentVariables();
-//         console.log(vars)
-//         assert(vars['3'] ==  20)
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        vars = await oracle.getCurrentVariables();
+        //console.log(vars)
+        assert(vars['3'] ==  40, "should be 40")
 
-//                 await tellorToken.approve(oracle.address,20,{from:accounts[0]});
-//         let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
-//         let vars = await oracle.getCurrentVariables();
-//         console.log(vars)
-//         assert(vars['3'] ==  20)
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        vars = await oracle.getCurrentVariables();
+        //console.log(vars)
+        assert(vars['3'] ==  60, "should be 60")
 
 
-//                 await tellorToken.approve(oracle.address,20,{from:accounts[0]});
-//         let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
-//         let vars = await oracle.getCurrentVariables();
-//         console.log(vars)
-//         assert(vars['3'] ==  20)
+        await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        vars = await oracle.getCurrentVariables();
+        //console.log(vars)
+        assert(vars['3'] ==  80, "should be 80")
 
-//         let req1 = await web3.eth.sendTransaction({to: oracle.address,from:accounts[2],gas:7000000,data:oracle2.methods.requestData(test1,"ETH/USD",1000,20).encodeABI()})
-//         onQ = await web3.eth.abi.decodeParameter('uint256',req1.logs[1].topics[1])
-//         assert(web3.utils.hexToNumberString(onQ) == 2, "should be 2");
-//        req1 = await web3.eth.sendTransaction({to: oracle.address,from:accounts[2],gas:7000000,data:oracle2.methods.requestData(api2,"ETH/USD",1000,40).encodeABI()})
-//         onQ = await web3.eth.abi.decodeParameter('uint256',req1.logs[1].topics[1])
-//        assert(web3.utils.hexToNumberString(onQ) == 3, "should be 3");
-//        req1 = await web3.eth.sendTransaction({to: oracle.address,from:accounts[2],gas:7000000,data:oracle2.methods.requestData(test1,"ETH/USD",1000,31).encodeABI()})
-//         onQ = await web3.eth.abi.decodeParameter('uint256',req1.logs[1].topics[1])
-//        assert(web3.utils.hexToNumberString(onQ) == 2, "should be 2");
-// 		req1 = await web3.eth.sendTransaction({to: oracle.address,from:accounts[2],gas:7000000,data:oracle2.methods.requestData(test2,"ETH/USD",1000,60).encodeABI()})
-//         onQ = await web3.eth.abi.decodeParameter('uint256',req1.logs[1].topics[1])
-//        assert(web3.utils.hexToNumberString(onQ) == 4, "should be 4");
+        
+        // await tellorToken.approve(oracle.address,20,{from:accounts[0]});
+        // res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
+        // vars = await oracle.getCurrentVariables();
+        // console.log(vars, web3.utils.hexToNumberString([1]))
+        // assert(vars['1'] ==  1, "should be 1")
 
-//     });
+        await tellorToken.approve(oracle.address,101,{from:accounts[0]});
+        res2 = await oracle.addTip(2,101,{from:accounts[0],gas:2000000})
+        vars = await oracle.getCurrentVariables();
+        //console.log(vars, web3.utils.hexToNumberString([1]))
+        assert(vars['1'] ==  2, "should be 2 first time")
+
+        // await tellorToken.approve(oracle.address,31,{from:accounts[0]});
+        // res2 = await oracle.addTip(1,31,{from:accounts[0],gas:2000000})
+        // vars = await oracle.getCurrentVariables();
+        // console.log(vars, web3.utils.hexToNumberString([1]))
+        // assert(vars['1'] ==  1, "should be 1")
+
+        // await tellorToken.approve(oracle.address,40,{from:accounts[0]});
+        // res2 = await oracle.addTip(2,60,{from:accounts[0],gas:2000000})
+        // vars = await oracle.getCurrentVariables();
+        // console.log(vars, web3.utils.hexToNumberString([1]))
+        // assert(vars['1'] ==  2, "should be 2 for second time")
+    });
 //     it("Request data and change on queue with another request", async function () {
 //     	balance1 = await (oracle.balanceOf(accounts[2],{from:accounts[1]}));
 //         test1 = 'test';
@@ -367,4 +378,4 @@
 //         assert(await oracle.getAddressVars(web3.utils.keccak256("tellorContract")) == newOracle.address, "vote should have failed");
 //     });
 	
-// });
+ });
