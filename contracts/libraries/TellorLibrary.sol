@@ -52,12 +52,9 @@ library TellorLibrary {
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
         require(tellorToken.allowance(msg.sender,address(this)) >= _tip);
-
         //If the tip > 0 transfer the tip to this contract
-        if (_tip > 0) {
-            tellorToken.transferFrom(msg.sender, address(this), _tip);
-        }
- 
+        require (_tip >= 5);//must be greater than 5 loyas so each miner gets at least 1 loya
+        tellorToken.transferFrom(msg.sender, address(this), _tip);
         //Update the information for the request that should be mined next based on the tip submitted
         updateOnDeck(self, _requestId, _tip);
         emit TipAdded(msg.sender, _requestId, _tip, self.requestDetails[_requestId].apiUintVars[keccak256("totalTip")]);
