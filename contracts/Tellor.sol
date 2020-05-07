@@ -106,6 +106,10 @@ contract Tellor is TellorGetters{
         tellor.requestStakingWithdraw(_amount);
     }
 
+    function  unlockDisputeFee (uint _disputeId) external{
+        tellor.unlockDisputeFee(_disputeId);
+    }
+
     /**
     * @dev This function allows users to withdraw their stake after a 7 day waiting period from request
     */

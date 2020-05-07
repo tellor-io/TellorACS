@@ -59,37 +59,34 @@ contract('ACS specific Tests', function(accounts) {
       assert(miners.length == 5, "miner selection should work")
    });
    it("test multiple staking one address, dispute and slashing", async function () {
-      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
-      console.log(1)
-      await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
-      console.log(2)
+      await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[2]});
+      await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[2],gas:2000000})
+      let vars = await oracle.getStakerInfo(accounts[2])
+      assert(vars[2] == 2, "should only be staked once now");
       let miners = await oracle.getCurrentMiners();
-      console.log(3)
       for(var i = 0;i<5;i++){
         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-        console.log("submit value", i)
       }
-      console.log(4)
-      //console.log(res.logs[6].args['_time'] - 0)
+      await oracle.theLazyCoon(accounts[1],web3.utils.toWei("500"));
       balance1 = await oracle.balanceOf(accounts[2]);
-      console.log(5)
       dispBal1 = await oracle.balanceOf(accounts[1])
-      console.log(6)
-      console.log(res.logs[6].args)
-      console.log(res.logs[6].args['_time'])
-      await  oracle.beginDispute(1,res.logs[6].args['_time'],2,{from:accounts[1],gas:2000000});
+      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});
+      await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1],gas:2000000});
       count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
       await oracle.vote(1,true,{from:accounts[3],gas:2000000})
       await helper.advanceTime(86400 * 22);
       await oracle.tallyVotes(1,{from:accounts[0],gas:2000000})
+      await helper.advanceTime(86400 * 2);
+      await oracle.unlockDisputeFee(1,{from:accounts[0],gas:2000000})
       dispInfo = await oracle.getAllDisputeVars(1);
       assert(dispInfo[2] == true,"Dispute Vote passed")
       balance2 = await oracle.balanceOf(accounts[2]);
       dispBal2 = await oracle.balanceOf(accounts[1])
       assert(balance1 - balance2 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")),"reported miner's balance should change correctly");
       assert(dispBal2 - dispBal1 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")), "disputing party's balance should change correctly")
-      assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('100'))
-      let vars = await oracle.getStakerInfo(accounts[5])
+      console.log(await oracle.balanceOf(accounts[5]))
+      assert(await oracle.balanceOf(accounts[2]) == web3.utils.toWei('100'),"Account 2 balance should be correct")
+      vars = await oracle.getStakerInfo(accounts[2])
       assert(vars[2] == 1, "should only be staked once now");
    });
    it("check reselection of validators", async function (){
@@ -121,11 +118,9 @@ contract('ACS specific Tests', function(accounts) {
           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000})
       }
       let miners = await oracle.getCurrentMiners();
-      console.log(miners)
       await helper.advanceTime(8640);
       await oracle.reselectNewValidators({from:accounts[0],gas:2000000})
       let newMiners = await oracle.getCurrentMiners();
-      console.log(newMiners)
       assert(miners != newMiners, "newMiners should be different") 
       assert(newMiners.length == 7, "new miner length should be 7")
    });

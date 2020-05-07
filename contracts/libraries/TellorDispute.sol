@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./TellorStorage.sol";
 import "./TellorTransfer.sol";
+import "./TellorStake.sol";
 import "../interfaces/TokenInterface.sol";
 
 /**
@@ -185,7 +186,6 @@ library TellorDispute {
                 //Update the miner's current status to staked(currentStatus = 1)
                 stakes.currentStatus = 1;
                 //tranfer the dispute fee to the miner
-                TellorTransfer.doTransfer(self, address(this), disp.reportedMiner, disp.disputeUintVars[keccak256("fee")]);
                 if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
                     _request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] = false;
                 }
@@ -207,11 +207,15 @@ library TellorDispute {
                     //transfer of the stakeAmount
                     stakes.currentStatus = 0;
                     stakes.startDate = now - (now % 86400);
-     
+                    TellorStake.removeFromStakerArray(self, stakes.stakePosition[0],disp.reportedMiner);
                     //Decreases the stakerCount since the miner's stake is being slashed
-                    self.uintVars[keccak256("stakerCount")]--;
-
-     
+                    TellorTransfer.doTransfer(self,msg.sender,address(0),stakes.withdrawAmount);
+                    if (TellorTransfer.balanceOf(self,msg.sender) == 0){
+                        stakes.currentStatus =0 ;
+                        self.uintVars[keccak256("stakerCount")] -= 1;
+                        self.uintVars[keccak256("uniqueStakers")] -= 1;
+                    }
+                    self.uintVars[keccak256("totalStaked")] -= self.uintVars[keccak256("stakeAmount")];
                     //Transfers the StakeAmount from the reporded miner to the reporting party
                     TellorTransfer.doTransfer(self, disp.reportedMiner, disp.reportingParty, self.uintVars[keccak256("stakeAmount")]);
      
@@ -222,6 +226,9 @@ library TellorDispute {
                 //if reported miner stake was already slashed, return the fee to other reporting paties
                 } else{
                     TellorTransfer.doTransfer(self, address(this), disp.reportingParty, disp.disputeUintVars[keccak256("fee")]);
+                    TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
+                    tellorToken.transfer(disp.reportingParty,disp.disputeUintVars[keccak256("fee")]);
+
                 }
             }
     }

@@ -69,15 +69,10 @@ event print(uint test);
     function newBlock(TellorStorage.TellorStorageStruct storage self, uint256 _requestId) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
-
-emit print(32); 
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
-
-emit print(33); 
         //The sorting algorithm that sorts the values of the first five values that come in
         TellorStorage.Details[5] memory a = self.currentMiners;
-emit print(34); 
                 uint256 i;
                 for (i = 1; i < 5; i++) {
                     uint256 temp = a[i].value;
@@ -93,12 +88,10 @@ emit print(34);
                         a[j].miner = temp2;
                     }
                 }
-emit print(35); 
         //Pay the miners
         for (i = 0; i < 5; i++) {
             tellorToken.transfer(a[i].miner, self.uintVars[keccak256("currentTotalTips")] / 5);
         }
-emit print(36); 
         emit NewValue(
             _requestId,
             _timeOfLastNewValue,
@@ -106,7 +99,6 @@ emit print(36);
             self.uintVars[keccak256("currentTotalTips")] - (self.uintVars[keccak256("currentTotalTips")] % 5),
             self.currentChallenge
         );
-emit print(37); 
         //Save the official(finalValue), timestamp of it, 5 miners and their submitted values for it, and its block number
         _request.finalValues[_timeOfLastNewValue] = a[2].value;
         _request.requestTimestamps.push(_timeOfLastNewValue);
@@ -119,15 +111,10 @@ emit print(37);
         self.requestIdByTimestamp[_timeOfLastNewValue] = _requestId;
         //add timeOfLastValue to the newValueTimestamps array
         self.newValueTimestamps.push(_timeOfLastNewValue);
-       
-       emit print(31); 
         selectNewValidators(self,true);
-
         //re-start the count for the slot progress to zero before the new request mining starts
         self.uintVars[keccak256("slotProgress")] = 0;
-emit print(38); 
         uint256 _topId = TellorGettersLibrary.getTopRequestID(self);
-emit print(39); 
         self.uintVars[keccak256("currentRequestId")] = _topId;
         //if the currentRequestId is not zero(currentRequestId exists/something is being mined) select the requestId with the hightest payout
         //else wait for a new tip to mine
@@ -146,10 +133,8 @@ emit print(39);
             //Reset the requestId TotalTip to 0 for the currentRequestId/onDeckRequestId since it will be mined next
             //and the tip is going to the current timestamp miners. The tip for the API needs to be reset to zero
             self.requestDetails[_topId].apiUintVars[keccak256("totalTip")] = 0;
-emit print(40); 
             //gets the max tip in the in the requestQ[51] array and its index within the array??
             uint256 newRequestId = TellorGettersLibrary.getTopRequestID(self);
-emit print(41); 
             //Issue the the next requestID 
            emit NewChallenge(
                 _topId,
@@ -177,38 +162,26 @@ emit print(41);
     {
         //requre miner is staked
         require(self.stakerDetails[msg.sender].currentStatus == 1, "Miner status is not staker");
-emit print(11);
         //Check the miner is submitting the pow for the current request Id
-        require(_requestId == self.uintVars[keccak256("currentRequestId")], "RequestId is wrong");
-emit print(12);       
+        require(_requestId == self.uintVars[keccak256("currentRequestId")], "RequestId is wrong");     
         //Check the validator submitting data is one of the selected validators
         require(self.validValidator[msg.sender] == true, "Not a selected validator");
-emit print(13); 
         //Make sure the miner does not submit a value more than once
         require(self.minersByChallenge[self.currentChallenge][msg.sender] == false, "Miner already submitted the value");
-emit print(14); 
         //Save the miner and value received
         self.currentMiners[self.uintVars[keccak256("slotProgress")]].value = _value;
         self.currentMiners[self.uintVars[keccak256("slotProgress")]].miner = msg.sender;
-emit print(15); 
-
         //Add to the count how many values have been submitted, since only 5 are taken per request
         self.uintVars[keccak256("slotProgress")]++;
-emit print(16); 
         //Update the miner status to true once they submit a value so they don't submit more than once
         self.minersByChallenge[self.currentChallenge][msg.sender] = true;
-emit print(17); 
         emit SolutionSubmitted(msg.sender, _requestId, _value, self.currentChallenge);
-emit print(18); 
         //If 5 values have been received, adjust the difficulty otherwise sort the values until 5 are received
         if (self.uintVars[keccak256("slotProgress")] == 5) {
             newBlock(self, _requestId);
-emit print(19); 
         }
-emit print(20); 
         //Once a validator submits data set their status back to false
         self.validValidator[msg.sender] == false;
-emit print(21); 
     }
 
 
