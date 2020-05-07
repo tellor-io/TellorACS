@@ -168,13 +168,8 @@ library TellorDispute {
             //If the vote for disputing a value is succesful(disp.tally >0) then unstake the reported
             // miner and transfer the stakeAmount and dispute fee to the reporting party
             if (disp.tally > 0) {
-
-
-
                 //Set the dispute state to passed/true
                 disp.disputeVotePassed = true;
-
-
                 //If the dispute was succeful(miner found guilty) then update the timestamp value to zero
                 //so that users don't use this datapoint
                 if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
@@ -209,19 +204,15 @@ library TellorDispute {
                     stakes.startDate = now - (now % 86400);
                     TellorStake.removeFromStakerArray(self, stakes.stakePosition[0],disp.reportedMiner);
                     //Decreases the stakerCount since the miner's stake is being slashed
-                    TellorTransfer.doTransfer(self,msg.sender,address(0),stakes.withdrawAmount);
+                    TellorTransfer.doTransfer(self,disp.reportedMiner,address(0),self.uintVars[keccak256("minimumStake")]);
                     if (TellorTransfer.balanceOf(self,msg.sender) == 0){
                         stakes.currentStatus =0 ;
                         self.uintVars[keccak256("stakerCount")] -= 1;
                         self.uintVars[keccak256("uniqueStakers")] -= 1;
                     }
-                    self.uintVars[keccak256("totalStaked")] -= self.uintVars[keccak256("stakeAmount")];
-                    //Transfers the StakeAmount from the reporded miner to the reporting party
-                    TellorTransfer.doTransfer(self, disp.reportedMiner, disp.reportingParty, self.uintVars[keccak256("stakeAmount")]);
-     
+                    self.uintVars[keccak256("totalStaked")] -= self.uintVars[keccak256("minimumStake")];
                     TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
-                    tellorToken.transfer(disp.reportingParty,self.uintVars[keccak256("stakeAmount")] + disp.disputeUintVars[keccak256("fee")]);
-
+                    tellorToken.transfer(disp.reportingParty,self.uintVars[keccak256("minimumStake")] + disp.disputeUintVars[keccak256("fee")]);
                     updateDisputeFee(self, _disputeId);
                 //if reported miner stake was already slashed, return the fee to other reporting paties
                 } else{

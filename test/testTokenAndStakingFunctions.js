@@ -1,38 +1,37 @@
-/** 
-* This contract tests the Tellor functions
-*/ 
+// /** 
+// * This contract tests the Tellor functions
+// */ 
 
-const Web3 = require('web3')
-const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8545'));
-const helper = require("./helpers/test_helpers");
-const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
-var ERC20 = artifacts.require("./ERC20.sol");
-var oracleAbi = Tellor.abi;
+// const Web3 = require('web3')
+// const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8545'));
+// const helper = require("./helpers/test_helpers");
+// const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
+// var ERC20 = artifacts.require("./ERC20.sol");
+// var oracleAbi = Tellor.abi;
 
-contract('ACS specific Tests', function(accounts) {
-  let oracle;
-  let tellorToken;
-  let res; 
-    beforeEach('Setup contract for each test', async function () {
-        tellorToken = await ERC20.new();
-        for(var i = 0;i<10;i++){
-          await tellorToken.mint(accounts[i],web3.utils.toWei('300','ether'));
-        }
-        oracle = await Tellor.new(tellorToken.address);
-        for(var i = 0;i<5;i++){
-          await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
-          await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
-        }
-        await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
-        await tellorToken.approve(oracle.address,5,{from:accounts[0]});
-        await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
-   });  
-    it("getVariables", async function(){
-		vars = await oracle.getCurrentVariables();
-        let miningApiId =vars['0'];
-        assert(miningApiId == 1, "miningApiId should be 1");
-        assert(vars['1'] == 5, "tip should be 5")
-    }); 
+// contract('Token and Staking Function Tests', function(accounts) {
+//   let oracle;
+//   let tellorToken;
+//   let res; 
+//     beforeEach('Setup contract for each test', async function () {
+//         tellorToken = await ERC20.new();
+//         for(var i = 0;i<10;i++){
+//           await tellorToken.mint(accounts[i],web3.utils.toWei('300','ether'));
+//         }
+//         oracle = await Tellor.new(tellorToken.address);
+//         for(var i = 0;i<5;i++){
+//           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
+//           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
+//         }
+//         await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+//         await tellorToken.approve(oracle.address,5,{from:accounts[0]});
+//         await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
+//    });  
+//     it("getVariables", async function(){
+// 		    vars = await oracle.getCurrentVariables();
+//         assert(vars['1'] == 1, "miningApiId should be 1");
+//         assert(vars['2'] == 5, "tip should be 5")
+//     }); 
     //     it("test Uniquestakers, staker count, totalStaked", async function(){
     //       assert(0==1)
     // }); 
@@ -120,4 +119,4 @@ contract('ACS specific Tests', function(accounts) {
  //        assert(await oracle.getUintVar(web3.utils.keccak256("disputeFee")) < disputeFee1,"disputeFee should change");
 
  //    });
- });
+ // });

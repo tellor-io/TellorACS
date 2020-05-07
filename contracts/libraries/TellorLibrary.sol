@@ -193,27 +193,19 @@ event print(uint test);
     function updateOnDeck(TellorStorage.TellorStorageStruct storage self, uint256 _requestId, uint256 _tip) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         uint256 onDeckRequestId = TellorGettersLibrary.getTopRequestID(self);
-   
-        //If the tip >0 update the tip for the requestId
-        if (_tip > 0) {
-            _request.apiUintVars[keccak256("totalTip")] = _request.apiUintVars[keccak256("totalTip")].add(_tip);
-        }
+        _request.apiUintVars[keccak256("totalTip")] = _request.apiUintVars[keccak256("totalTip")].add(_tip);
         //Set _payout for the submitted request
         uint256 _payout = _request.apiUintVars[keccak256("totalTip")];
-
         //If there is no current request being mined
         //then set the currentRequestId to the requestid of the requestData or addtip requestId submitted,
         // the totalTips to the payout/tip submitted, and issue a new mining challenge
         if (self.uintVars[keccak256("currentRequestId")] == 0) {
-            _request.apiUintVars[keccak256("totalTip")] = 0;
             self.uintVars[keccak256("currentRequestId")] = _requestId;
             self.uintVars[keccak256("currentTotalTips")] = _payout;
- //           self.currentChallenge = keccak256(abi.encodePacked(_payout, self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
+            self.currentChallenge = keccak256(abi.encodePacked(_payout, self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
             selectNewValidators(self, false);
             emit NewChallenge(
- //               self.currentChallenge,
                 self.uintVars[keccak256("currentRequestId")],
- //               self.uintVars[keccak256("difficulty")],
                 self.uintVars[keccak256("currentTotalTips")]
             );
         } else {
@@ -241,7 +233,7 @@ event print(uint test);
                     _request.apiUintVars[keccak256("requestQPosition")] = _index;
                 }
                 // else if the requestid is part of the requestQ[51] then update the tip for it
-            } else if (_tip > 0) {
+            } else{
                 self.requestQ[_request.apiUintVars[keccak256("requestQPosition")]] += _tip;
             }
         }

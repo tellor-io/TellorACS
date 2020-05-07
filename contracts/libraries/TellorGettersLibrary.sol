@@ -129,12 +129,11 @@ library TellorGettersLibrary {
     function getCurrentVariables(TellorStorage.TellorStorageStruct storage self)
         internal
         view
-        returns (bytes32, uint256, uint256, uint256)
+        returns (bytes32, uint256, uint256)
     {
         return (
             self.currentChallenge,
             self.uintVars[keccak256("currentRequestId")],
-            self.uintVars[keccak256("difficulty")],
             self.requestDetails[self.uintVars[keccak256("currentRequestId")]].apiUintVars[keccak256("totalTip")]
         );
     }

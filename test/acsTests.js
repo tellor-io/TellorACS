@@ -69,7 +69,7 @@ contract('ACS specific Tests', function(accounts) {
       }
       await oracle.theLazyCoon(accounts[1],web3.utils.toWei("500"));
       balance1 = await oracle.balanceOf(accounts[2]);
-      dispBal1 = await oracle.balanceOf(accounts[1])
+      dispBal1 = await tellorToken.balanceOf(accounts[1])
       await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});
       await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1],gas:2000000});
       count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
@@ -81,10 +81,9 @@ contract('ACS specific Tests', function(accounts) {
       dispInfo = await oracle.getAllDisputeVars(1);
       assert(dispInfo[2] == true,"Dispute Vote passed")
       balance2 = await oracle.balanceOf(accounts[2]);
-      dispBal2 = await oracle.balanceOf(accounts[1])
-      assert(balance1 - balance2 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")),"reported miner's balance should change correctly");
-      assert(dispBal2 - dispBal1 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")), "disputing party's balance should change correctly")
-      console.log(await oracle.balanceOf(accounts[5]))
+      dispBal2 = await tellorToken.balanceOf(accounts[1])
+      assert(balance1 - balance2 == await oracle.getUintVar(web3.utils.keccak256("minimumStake")),"reported miner's balance should change correctly");
+      assert(dispBal2 - dispBal1 == await oracle.getUintVar(web3.utils.keccak256("minimumStake")), "disputing party's balance should change correctly")
       assert(await oracle.balanceOf(accounts[2]) == web3.utils.toWei('100'),"Account 2 balance should be correct")
       vars = await oracle.getStakerInfo(accounts[2])
       assert(vars[2] == 1, "should only be staked once now");

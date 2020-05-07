@@ -94,7 +94,7 @@ contract TellorGetters {
     * @dev Getter function for variables for the requestId being currently mined(currentRequestId)
     * @return current challenge, curretnRequestId, level of difficulty, total tip for the request
     */
-    function getCurrentVariables() external view returns (bytes32, uint256, uint256, uint256) {
+    function getCurrentVariables() external view returns (bytes32, uint256, uint256) {
         return tellor.getCurrentVariables();
     }
 
