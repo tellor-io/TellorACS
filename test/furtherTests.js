@@ -22,7 +22,7 @@ contract('Further Tests', function(accounts) {
           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
         }
-                await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.mint(accounts[0],web3.utils.toWei("500"));
         await tellorToken.approve(oracle.address,5,{from:accounts[0]});
         await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
    });  
@@ -38,7 +38,7 @@ contract('Further Tests', function(accounts) {
         assert(web3.utils.hexToNumberString(apiIdonQ) == 2, "timestamp on Q should be apiID");
     });
     it("Add Tip to current ID", async function () {
-        await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.mint(accounts[0],web3.utils.toWei("500"));
         await tellorToken.approve(oracle.address,20,{from:accounts[0]});
         let res2 = await oracle.addTip(1,20,{from:accounts[0],gas:2000000})
         let vars = await oracle.getCurrentVariables();
@@ -46,7 +46,7 @@ contract('Further Tests', function(accounts) {
     });
         
     it("several request data", async function () {
-        await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.mint(accounts[0],web3.utils.toWei("500"));
         await tellorToken.approve(oracle.address,20,{from:accounts[0]});
         let res2 = await oracle.addTip(2,20,{from:accounts[0],gas:2000000})
         let vars = await oracle.getVariablesOnDeck();
@@ -82,7 +82,7 @@ contract('Further Tests', function(accounts) {
     });
 
   it("Test Add Value to Pool and change on queue", async function () {
-        await oracle.theLazyCoon(accounts[2],web3.utils.toWei("500"));
+        await tellorToken.mint(accounts[2],web3.utils.toWei("500"));
         balance1 = await (oracle.balanceOf(accounts[2],{from:accounts[1]}));
         await tellorToken.approve(oracle.address,20,{from:accounts[2]});
         await oracle.addTip(2,20,{from:accounts[2],gas:2000000})

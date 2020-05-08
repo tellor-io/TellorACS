@@ -11,37 +11,11 @@ import "./Utilities.sol";
 */
 library TellorGettersLibrary {
     using SafeMath for uint256;
-
-    event NewTellorAddress(address _newTellor); //emmited when a proposed fork is voted true
-    event NewTellorToken(address _newToken);
-
     /*Functions*/
-
-    //The next two functions are onlyOwner functions.  For Tellor to be truly decentralized, we will need to transfer the Deity to the 0 address.
-    //Only needs to be in library
-    /**
-    * @dev This function allows us to set a new Deity (or remove it)
-    * @param _newDeity address of the new Deity of the tellor system
-    */
-    function changeDeity(TellorStorage.TellorStorageStruct storage self, address _newDeity) internal {
-        require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
-        self.addressVars[keccak256("_deity")] = _newDeity;
-    }
 
     function getCurrentMiners(TellorStorage.TellorStorageStruct storage self) internal view returns(address[] memory miners){
         return self.selectedValidators;
     }
-
-    /**
-    * @dev This function allows the deity to upgrade the Tellor System
-    * @param _newToken address of new updated TellorCore contract
-    */
-    function changeTellorToken(TellorStorage.TellorStorageStruct storage self, address _newToken)internal{
-        require(self.addressVars[keccak256("_deity")] == msg.sender, "Sender is not deity");
-        self.addressVars[keccak256("tellorToken")] = _newToken;
-        emit NewTellorToken(_newToken);
-    }
-
     /*Tellor Getters*/
 
     /**

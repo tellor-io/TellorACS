@@ -23,7 +23,7 @@
 //           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
 //           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
 //         }
-//         await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+//         await tellorToken.mint(accounts[0],web3.utils.toWei("500"));
 //         await tellorToken.approve(oracle.address,5,{from:accounts[0]});
 //         await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
 //    });  

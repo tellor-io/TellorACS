@@ -15,29 +15,14 @@ contract Tellor is TellorGetters{
     event NewTellorToken(address _token);
 
     /*Functions*/
-
-    /*This is a cheat for demo purposes, will delete upon actual launch*/
-   function theLazyCoon(address _address, uint _amount) public {
-        tellor.theLazyCoon(_address,_amount);
-    }
-
-
     constructor (address _tellorToken) public {
         tellor.uintVars[keccak256("decimals")] = 18;
         tellor.uintVars[keccak256("targetMiners")] = 200;
         tellor.uintVars[keccak256("disputeFee")] = 10e18;
         tellor.uintVars[keccak256("minimumStake")] = 100e18;
-        tellor.addressVars[keccak256("_deity")] = msg.sender;
         tellor.addressVars[keccak256("tellorToken")] = _tellorToken;
-        //tellor.stakers.push(address(0));
-        emit NewTellorToken(tellor.addressVars[keccak256("tellorToken")]);
         emit NewTellorToken(_tellorToken);
     }
-
-    function changeTellorToken(address _newToken) external{
-        tellor.changeTellorToken(_newToken);
-    }
-
     /**
     * @dev Helps initialize a dispute by assigning it a disputeId
     * when a miner returns a false on the validate array(in Tellor.ProofOfWork) it sends the

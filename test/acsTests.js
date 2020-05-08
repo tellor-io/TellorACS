@@ -23,18 +23,10 @@ contract('ACS specific Tests', function(accounts) {
           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
         }
-        await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.mint(accounts[0],web3.utils.toWei("500"));
         await tellorToken.approve(oracle.address,5,{from:accounts[0]});
         await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
    });  
-
-   it("change Tellor Contract", async function () {
-    assert(await oracle.getAddressVars(web3.utils.keccak256("_deity")) == accounts[0])
-    assert(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")) == tellorToken.address, "token address should be correct")
-    let newToken = await ERC20.new()
-    await oracle.changeTellorToken(newToken.address);
-    assert(await oracle.getAddressVars(web3.utils.keccak256("tellorToken")) == newToken.address, "new token should be correct")
-   });
    it("test multiple staking one address", async function () {
      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
     await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
@@ -67,7 +59,7 @@ contract('ACS specific Tests', function(accounts) {
       for(var i = 0;i<5;i++){
         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
       }
-      await oracle.theLazyCoon(accounts[1],web3.utils.toWei("500"));
+      await tellorToken.mint(accounts[1],web3.utils.toWei("500"));
       balance1 = await oracle.balanceOf(accounts[2]);
       dispBal1 = await tellorToken.balanceOf(accounts[1])
       await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});

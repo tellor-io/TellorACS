@@ -32,15 +32,7 @@ library TellorLibrary {
     event NewValidatorsSelected(address _validator);
 
     
-    /*Functions*/
-
-    /*This is a cheat for demo purposes, will delete upon actual launch*/
-    function theLazyCoon(TellorStorage.TellorStorageStruct storage self,address _address, uint _amount) public {
-        self.uintVars[keccak256("total_supply")] += _amount;
-        TellorTransfer.updateBalanceAtNow(self.balances[_address],_amount);
-    } 
-
-    
+    /*Functions*/    
     /**
     * @dev Add tip to Request value from oracle
     * @param _requestId being requested to be mined

@@ -1,50 +1,49 @@
-// /** 
-// * This contract tests the Tellor functions
-// */ 
+/** 
+* This contract tests the Tellor functions
+*/ 
 
-// const Web3 = require('web3')
-// const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8545'));
-// const helper = require("./helpers/test_helpers");
-// const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
-// var ERC20 = artifacts.require("./ERC20.sol");
-// var oracleAbi = Tellor.abi;
+const Web3 = require('web3')
+const web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8545'));
+const helper = require("./helpers/test_helpers");
+const Tellor = artifacts.require("./Tellor.sol"); // globally injected artifacts helper
+var ERC20 = artifacts.require("./ERC20.sol");
+var oracleAbi = Tellor.abi;
 
-// contract('Oracle Tests', function(accounts) {
-//   let oracle;
-//   let tellorToken;
-//   let res; 
-//     beforeEach('Setup contract for each test', async function () {
-//         tellorToken = await ERC20.new();
-//         for(var i = 0;i<10;i++){
-//           await tellorToken.mint(accounts[i],web3.utils.toWei('300','ether'));
-//         }
-//         oracle = await Tellor.new(tellorToken.address);
-//         for(var i = 0;i<5;i++){
-//           await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
-//           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
-//         }
-//         await oracle.theLazyCoon(accounts[0],web3.utils.toWei("500"));
-//         await tellorToken.approve(oracle.address,5,{from:accounts[0]});
-//         await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
-//     });  
-//     it("Get Symbol,Name, Decimals", async function(){
-// 		let symbol = await oracle.symbol();
-//         assert.equal(symbol,"TRB","the Symbol should be TRB");
-//         let name = await oracle.name();
-//         assert.equal(name,"Tellor Tributes","the name should be Tellor Tributes");
-//         let decimals = await oracle.decimals()
-//         assert.equal(decimals,18,"the decimals should be 18");
-//     });
-  //  it("getStakersInfo", async function(){
-		// let info = await oracle.getStakerInfo(accounts[1])
-  //       let stake = web3.utils.hexToNumberString(info['0']);
-  //       let startDate = web3.utils.hexToNumberString(info['1']);
-  //       let _date = new Date();
-  //       let d = (_date - (_date % 86400000))/1000;
-  //       console.log(_date,d,startDate);
-  //       assert(d*1==startDate, "startDate is today");
-  //       assert(stake*1 == 1, "Should be 1 for staked address");
-  //    });
+contract('Oracle Tests', function(accounts) {
+  let oracle;
+  let tellorToken;
+  let res; 
+    beforeEach('Setup contract for each test', async function () {
+        tellorToken = await ERC20.new();
+        for(var i = 0;i<10;i++){
+          await tellorToken.mint(accounts[i],web3.utils.toWei('300','ether'));
+        }
+        oracle = await Tellor.new(tellorToken.address);
+        for(var i = 0;i<5;i++){
+          await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[i]});
+          await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
+        }
+        await tellorToken.mint(accounts[0],web3.utils.toWei("500"));
+        await tellorToken.approve(oracle.address,5,{from:accounts[0]});
+        await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
+    });  
+    it("Get Symbol,Name, Decimals", async function(){
+		    let symbol = await oracle.symbol();
+        assert.equal(symbol,"TRB","the Symbol should be TRB");
+        let name = await oracle.name();
+        assert.equal(name,"Tellor Tributes","the name should be Tellor Tributes");
+        let decimals = await oracle.decimals()
+        assert.equal(decimals,18,"the decimals should be 18");
+    });
+   it("getStakersInfo", async function(){
+		    let info = await oracle.getStakerInfo(accounts[1])
+        let stake = web3.utils.hexToNumberString(info['0']);
+        let startDate = web3.utils.hexToNumberString(info['1']);
+        let _date = new Date();
+        let d = (_date - (_date % 86400000))/1000;
+        assert(d*1==startDate, "startDate is today");
+        assert(stake*1 == 1, "Should be 1 for staked address");
+     });
  	// it("Test 5 Mines", async function () {
 		// for(var i = 0;i < 5;i++){
   //           logMineWatcher = await promisifyLogWatch(oracle.address, 'NewValue(uint256,uint256,uint256,uint256,bytes32)');//or Event Mine?
@@ -455,4 +454,4 @@
   //       console.log(res['2'])
   //       assert(res['2'] == 5 , "last payout had a tip of 5")
   //   });
- // });    
+ });    
