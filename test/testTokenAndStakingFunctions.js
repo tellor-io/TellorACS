@@ -32,47 +32,99 @@ contract('Token and Staking Function Tests', function(accounts) {
         assert(vars['1'] == 1, "miningApiId should be 1");
         assert(vars['2'] == 5, "tip should be 5")
     }); 
-    //     it("test Uniquestakers, staker count, totalStaked", async function(){
-    //       assert(0==1)
-    // }); 
+    it("re-Staking without withdraw ", async function(){
+    	  await helper.advanceTime(86400 * 10);
+        await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[1],gas:2000000})
+        let s =  await oracle.getStakerInfo(accounts[1])
+        assert(s[0] ==2 , "is in withdrawal period" );
+        await helper.advanceTime(86400 * 10);
+        await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[1]});
+        await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
+        s =  await oracle.getStakerInfo(accounts[1])
+        assert(s[0] == 1, "is Staked" );
+        balance1 = await (tellorToken.balanceOf(accounts[1]));
+        await oracle.withdrawStake({from:accounts[1],gas:2000000})
+        balance2 = await (tellorToken.balanceOf(accounts[1]));
+        assert(balance2 - balance1 == web3.utils.toWei("100"), "user should be able to withdraw 1")
+        s =  await oracle.getStakerInfo(accounts[1])
+        assert(s[0] == 1, "is Staked" );
 
- //    it("re-Staking without withdraw ", async function(){
- //    	await helper.advanceTime(86400 * 10);
- //        let withdrawreq = await web3.eth.sendTransaction({to:oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.requestStakingWithdraw().encodeABI()})
- //        let weSender =  await web3.eth.abi.decodeParameter('address',withdrawreq.logs[0].topics[1]);
- //        assert(weSender == accounts[1], "withdraw request by account 1");
- //        await helper.advanceTime(86400 * 10);
-	// 		let s =  await oracle.getStakerInfo(accounts[1])
- //        assert(s[0] !=1 , "is not Staked" );
- //        await web3.eth.sendTransaction({to:oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.depositStake().encodeABI()})
- //        s =  await oracle.getStakerInfo(accounts[1])
- //        assert(s[0] == 1, "is not Staked" );
- //    });    
+    });    
 
- //    it("withdraw and re-stake", async function(){
- //    	await helper.advanceTime(86400 * 10);
- //        let withdrawreq = await web3.eth.sendTransaction({to:oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.requestStakingWithdraw().encodeABI()})
- //        let weSender =  await web3.eth.abi.decodeParameter('address',withdrawreq.logs[0].topics[1]);
- //        assert(weSender == accounts[1], "withdraw request by account 1");
- //        await helper.advanceTime(86400 * 10);
- //               let s =  await oracle.getStakerInfo(accounts[1])
-	// 		assert(s[0] !=1, "is not Staked" );
- //        await web3.eth.sendTransaction({to:oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.withdrawStake().encodeABI()})
- //        s =  await oracle.getStakerInfo(accounts[1])
- //        assert(s[0] != 1, " not Staked" );
- //        await web3.eth.sendTransaction({to:oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.depositStake().encodeABI()}) 
- //        s =  await oracle.getStakerInfo(accounts[1])
- //        assert(s[0] ==1, " Staked" );
- //    }); 
- //    it("Check Balance that for voting", async function(){
- //    	assert(0==1)
- //    });
- //    it("Deposit Just to vote", async function(){
- //    	assert(0==1)
- //    });
- //    it("Three dispute rounds with increased deposits for voting each time", async function(){
- //    	assert(0==1)
- //    });
+    it("withdraw and re-stake", async function(){
+        await helper.advanceTime(86400 * 10);
+        await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[1],gas:2000000})
+        let s =  await oracle.getStakerInfo(accounts[1])
+        console.log(s)
+        assert(s[0] ==2 , "is in withdrawal period" );
+        await helper.advanceTime(86400 * 10);
+        balance1 = await (tellorToken.balanceOf(accounts[1]));
+        await oracle.withdrawStake({from:accounts[1],gas:2000000})
+        s =  await oracle.getStakerInfo(accounts[1])
+        assert(s[0] == 0 , "is Not Staked" );
+        balance2 = await (tellorToken.balanceOf(accounts[1]));
+        assert(balance2 - balance1 == web3.utils.toWei("100"), "user should be able to withdraw 1")
+        await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[1]});
+        await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
+        s =  await oracle.getStakerInfo(accounts[1])
+        assert(s[0] == 1, "is Staked" );
+    }); 
+    it("Three dispute rounds with increased deposits (minting) for voting each time", async function(){
+    	await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[2]});
+      await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[2],gas:2000000})
+      let vars = await oracle.getStakerInfo(accounts[2])
+      assert(vars[2] == 2, "should only be staked once now");
+      let miners = await oracle.getCurrentMiners();
+      for(var i = 0;i<5;i++){
+        res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
+      }
+      await tellorToken.mint(accounts[1],web3.utils.toWei("500"));
+      balance1 = await oracle.balanceOf(accounts[2]);
+      dispBal1 = await tellorToken.balanceOf(accounts[1])
+      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});
+      await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1],gas:2000000});
+      count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
+      //vote 1 passes
+      await oracle.vote(1,true,{from:accounts[3],gas:2000000})
+      await helper.advanceTime(86400 * 22);
+      await oracle.tallyVotes(1,{from:accounts[0],gas:2000000})
+      await helper.advanceTime(86400 * 2);
+      await helper.expectThrow(oracle.unlockDisputeFee(1,{from:accounts[0],gas:2000000})) //try to withdraw
+            dispInfo = await oracle.getAllDisputeVars(1);
+      assert(dispInfo[2] == true,"Dispute Vote passed")
+      //vote 2 - fails
+      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});
+      await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1],gas:2000000});
+      count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
+      await oracle.vote(1,true,{from:accounts[3],gas:2000000})
+      await oracle.vote(1,true,{from:accounts[4],gas:2000000})
+      await helper.advanceTime(86400 * 22);
+      await oracle.tallyVotes(1,{from:accounts[0],gas:2000000})
+            dispInfo = await oracle.getAllDisputeVars(1);
+      assert(dispInfo[2] == false,"Dispute Vote passed")
+      // vote 3 - passes
+      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});
+      await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1],gas:2000000});
+      count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
+      await oracle.vote(1,true,{from:accounts[3],gas:2000000})
+      await oracle.vote(1,true,{from:accounts[4],gas:2000000})
+      await oracle.vote(1,true,{from:accounts[5],gas:2000000})
+      await helper.advanceTime(86400 * 22);
+      await oracle.tallyVotes(1,{from:accounts[0],gas:2000000})
+      dispInfo = await oracle.getAllDisputeVars(1);
+      assert(dispInfo[2] == true,"Dispute Vote passed")
+
+      await oracle.unlockDisputeFee(1,{from:accounts[0],gas:2000000})
+      dispInfo = await oracle.getAllDisputeVars(1);
+      assert(dispInfo[2] == true,"Dispute Vote passed")
+      balance2 = await oracle.balanceOf(accounts[2]);
+      dispBal2 = await tellorToken.balanceOf(accounts[1])
+      assert(balance1 - balance2 == await oracle.getUintVar(web3.utils.keccak256("minimumStake")),"reported miner's balance should change correctly");
+      assert(dispBal2 - dispBal1 == await oracle.getUintVar(web3.utils.keccak256("minimumStake")), "disputing party's balance should change correctly")
+      assert(await oracle.balanceOf(accounts[2]) == web3.utils.toWei('100'),"Account 2 balance should be correct")
+      vars = await oracle.getStakerInfo(accounts[2])
+      assert(vars[2] == 1, "should only be staked once now");
+    });
   //    it("Test tip current id halfway through submissions", async function(){
  //    	assert(0==1)
  //    });
@@ -80,13 +132,9 @@ contract('Token and Staking Function Tests', function(accounts) {
  //    it("Attempt to unlockDisputeFee before time is up - stake", async function(){
 	// 	assert(0==1)
 	// });
- //    it("Attempt to withdraw before stake time is up", async function(){ 
- //        balance1b = await ( web3.eth.call({to:oracle.address,data:oracle3.methods.balanceOf(accounts[1]).encodeABI()}));
- //        await helper.expectThrow(web3.eth.sendTransaction({to:oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.withdrawStake().encodeABI()}) );
- //        s =  await oracle.getStakerInfo(accounts[1])
- //        assert(s[0] ==1, " Staked" );
- //        assert(web3.utils.fromWei(balance1b) == 1000, "Balance should equal transferred amt");
- //    });
+    it("Attempt to withdraw invalidly", async function(){ 
+        await helper.expectThrow(oracle.withdrawStake({from:accounts[1],gas:2000000}));
+    });
 
  //    it("Staking, requestStakingWithdraw, withdraw stake", async function(){
 	// 	let withdrawreq = await web3.eth.sendTransaction({to:oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.requestStakingWithdraw().encodeABI()})

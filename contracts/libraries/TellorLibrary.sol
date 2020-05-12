@@ -45,7 +45,7 @@ library TellorLibrary {
             
         require(tellorToken.allowance(msg.sender,address(this)) >= _tip);
         //If the tip > 0 transfer the tip to this contract
-        require (_tip >= 5);//must be greater than 5 loyas so each miner gets at least 1 loya
+        require (_tip >= 5, "Tip must be greater than 5");//must be greater than 5 loyas so each miner gets at least 1 loya
         tellorToken.transferFrom(msg.sender, address(this), _tip);
         //Update the information for the request that should be mined next based on the tip submitted
         updateOnDeck(self, _requestId, _tip);
@@ -103,7 +103,6 @@ event print(uint test);
         self.requestIdByTimestamp[_timeOfLastNewValue] = _requestId;
         //add timeOfLastValue to the newValueTimestamps array
         self.newValueTimestamps.push(_timeOfLastNewValue);
-        selectNewValidators(self,true);
         //re-start the count for the slot progress to zero before the new request mining starts
         self.uintVars[keccak256("slotProgress")] = 0;
         uint256 _topId = TellorGettersLibrary.getTopRequestID(self);
@@ -111,6 +110,7 @@ event print(uint test);
         //if the currentRequestId is not zero(currentRequestId exists/something is being mined) select the requestId with the hightest payout
         //else wait for a new tip to mine
         if (_topId > 0) {
+            selectNewValidators(self,true);
             //Update the current request to be mined to the requestID with the highest payout
             self.uintVars[keccak256("currentTotalTips")] = self.requestDetails[_topId].apiUintVars[keccak256("totalTip")];
             //Remove the currentRequestId/onDeckRequestId from the requestQ array containing the rest of the 50 requests
@@ -195,16 +195,18 @@ event print(uint test);
             self.uintVars[keccak256("currentRequestId")] = _requestId;
             self.uintVars[keccak256("currentTotalTips")] = _payout;
             self.currentChallenge = keccak256(abi.encodePacked(_payout, self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
-            selectNewValidators(self, false);
+            selectNewValidators(self,true);
             emit NewChallenge(
                 self.uintVars[keccak256("currentRequestId")],
                 self.uintVars[keccak256("currentTotalTips")]
             );
-        } else {
+        } else if (_requestId == self.uintVars[keccak256("currentRequestId")]) {
+                self.uintVars[keccak256("currentTotalTips")] = self.uintVars[keccak256("currentTotalTips")] + _payout;
+        }else {
             //If there is no OnDeckRequestId
             //then replace/add the requestId to be the OnDeckRequestId, queryHash and OnDeckTotalTips(current highest payout, aside from what
             //is being currently mined)
-            if (_payout > self.requestDetails[onDeckRequestId].apiUintVars[keccak256("totalTip")] || (onDeckRequestId == 0)) {
+            if (_payout > self.requestDetails[onDeckRequestId].apiUintVars[keccak256("totalTip")]) {
                 //let everyone know the next on queue has been replaced
                 emit NewRequestOnDeck(_requestId, _payout);
             }
@@ -218,7 +220,7 @@ event print(uint test);
                 //we have to zero out the oldOne
                 //if the _payout is greater than the current minimum payout in the requestQ[51] or if the minimum is zero
                 //then add it to the requestQ array aand map its index information to the requestId and the apiUintvars
-                if (_payout > _min || _min == 0) {
+                if (_payout > _min) {
                     self.requestQ[_index] = _payout;
                     self.requestDetails[self.requestIdByRequestQIndex[_index]].apiUintVars[keccak256("requestQPosition")] = 0;
                     self.requestIdByRequestQIndex[_index] = _requestId;
@@ -226,7 +228,7 @@ event print(uint test);
                 }
                 // else if the requestid is part of the requestQ[51] then update the tip for it
             } else{
-                self.requestQ[_request.apiUintVars[keccak256("requestQPosition")]] += _tip;
+                self.requestQ[_request.apiUintVars[keccak256("requestQPosition")]] = _payout;
             }
         }
     }

@@ -42,9 +42,8 @@ library TellorStake {
             removeFromStakerArray(self, stakes.stakePosition[i],_staker);
         }
        //Change the miner staked to locked to be withdrawStake
-        if (TellorTransfer.balanceOf(self,_staker) == 0){
+        if (TellorTransfer.balanceOf(self,_staker) - _amount == 0){
             stakes.currentStatus = 2;
-            self.uintVars[keccak256("stakerCount")] -= 1;
         }
         stakes.withdrawDate = now - (now % 86400);
         stakes.withdrawAmount = _amount;
@@ -59,9 +58,7 @@ library TellorStake {
         //Require the staker has locked for withdraw(currentStatus ==2) and that 7 days have
         //passed by since they locked for withdraw
         require(now - (now % 86400) - stakes.withdrawDate >= 7 days, "7 days didn't pass");
-        require(stakes.currentStatus !=3 , "Miner is under dispute");
-
-        
+        require(stakes.currentStatus !=3 , "Miner is under dispute");        
             TellorTransfer.doTransfer(self,msg.sender,address(0),stakes.withdrawAmount);
             if (TellorTransfer.balanceOf(self,msg.sender) == 0){
                 stakes.currentStatus =0 ;

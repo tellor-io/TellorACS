@@ -45,24 +45,26 @@ contract('Oracle Tests', function(accounts) {
         assert(stake*1 == 1, "Should be 1 for staked address");
      });
  	  it("Test 5 Mines", async function () {
+      let miners = await oracle.getCurrentMiners();
       for(var i = 0;i<5;i++){
         for(var j = 0;j<5;j++){
-          res = await oracle.submitMiningSolution(1,100 + j,{from:accounts[j]});
+          res = await oracle.submitMiningSolution(1,100 + j,{from:miners[j]});
         }
-        res = web3.eth.abi.decodeParameters(['uint256','uint256'],res.data);
-        assert(res[0] > 0, "value should be positive");
+        assert(res.logs[1].args[2] > 0, "value should be positive");
+        let vars = await oracle.getCurrentVariables();
+        console.log(vars)
         await tellorToken.approve(oracle.address,5,{from:accounts[0]});
         await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
       }
     });
-  //   it("Test Is Data", async function () {
-  //     for(var i = 0;i<5;i++){
-  //       res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-  //     }
-  //       res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
-  // 		  data = await oracle.getMinedBlockNum(1,res[0]);
-  //       assert(data > 0, "Should be true if Data exist for that point in time");
-  //   });
+    it("Test Is Data", async function () {
+      for(var i = 0;i<5;i++){
+        res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
+      }
+        res = res.logs[1].args['_time']
+  		  data = await oracle.getMinedBlockNum(1,res.logs[1].args['_time']);
+        assert(data > 0, "Should be true if Data exist for that point in time");
+    });
   //   it("Test Get Last Query", async function () {
   //       for(var i = 0;i<5;i++){
   //         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});

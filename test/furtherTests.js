@@ -84,54 +84,51 @@ contract('Further Tests', function(accounts) {
   it("Test Add Value to Pool and change on queue", async function () {
         await tellorToken.mint(accounts[2],web3.utils.toWei("500"));
         balance1 = await (tellorToken.balanceOf(accounts[2]));
-        await tellorToken.approve(oracle.address,20,{from:accounts[2]});
-        await oracle.addTip(2,20,{from:accounts[2],gas:2000000})
+        await tellorToken.approve(oracle.address,web3.utils.toWei("20"),{from:accounts[2]});
+        await oracle.addTip(2,web3.utils.toWei("20"),{from:accounts[2],gas:2000000})
         apiVars = await oracle.getRequestVars(2)
-        assert(apiVars['1'] == 20, "value pool should be 20");
+        assert(apiVars['1'] == web3.utils.toWei("20"), "value pool should be 20");
         vars = await oracle.getVariablesOnDeck();
-        assert(vars['1'] == 20, "Current payout on Q should be 20");
+        assert(vars['1'] == web3.utils.toWei("20"), "Current payout on Q should be 20");
         assert(vars['0'] == 2, "apiOnQ on Q should be apiID");
-        await tellorToken.approve(oracle.address,30,{from:accounts[2]});
-        await oracle.addTip(3,30,{from:accounts[2],gas:2000000})
+        await tellorToken.approve(oracle.address,web3.utils.toWei("30"),{from:accounts[2]});
+        await oracle.addTip(3,web3.utils.toWei("30"),{from:accounts[2],gas:2000000})
         vars = await oracle.getVariablesOnDeck();
         assert(vars['0'] ==  3, "should be 3 for second time")
-        assert(vars['1'] == 30, "Current payout on Q should be 30");
+        assert(vars['1'] == web3.utils.toWei("30"), "Current payout on Q should be 30");
         balance2 = await (tellorToken.balanceOf(accounts[2]));
         console.log(web3.utils.fromWei(balance1),web3.utils.fromWei(balance2) )
-        console.log(web3.utils.fromWei((balance1 - balance2)));
-        assert(web3.utils.fromWei(balance1 -balance2) == 50, "balance should be down by 50")
-        await tellorToken.approve(oracle.address,20,{from:accounts[2]});
-        await oracle.addTip(2,20,{from:accounts[2],gas:2000000})
+        var mybal = (balance1 - balance2)
+        console.log(web3.utils.fromWei(String(mybal)));
+        assert(web3.utils.fromWei(balance1)- web3.utils.fromWei(balance2) == 50, "balance should be down by 50")
+        await tellorToken.approve(oracle.address,web3.utils.toWei("20"),{from:accounts[2]});
+        await oracle.addTip(2,web3.utils.toWei("20"),{from:accounts[2],gas:2000000})
         balance3 = await (tellorToken.balanceOf(accounts[2],{from:accounts[0]}));
-        assert(web3.utils.fromWei(balance1 - balance3) == 70, "balance should be down by 70")
+        assert(web3.utils.fromWei(balance1) - web3.utils.fromWei(balance3) == 70, "balance should be down by 70")
         vars = await oracle.getVariablesOnDeck();
         assert(vars['0'] ==  2, "should be 2 for second time")
-        assert(vars['1'] == 40, "2Current payout on Q should be 40");      
+        assert(vars['1'] == web3.utils.toWei("40"), "2Current payout on Q should be 40");      
     }); 
     it("Test getMax payout and index 51 req with overlapping tips and requests", async function () {
         await tellorToken.approve(oracle.address,5,{from:accounts[0]});
         await oracle.addTip(2,5,{from:accounts[0],gas:2000000})
         await tellorToken.mint(accounts[2],web3.utils.toWei("500"));
-        apiIdforpayoutPoolIndex = await oracle.getRequestIdByRequestQIndex(0);
-        apiIdforpayoutPoolIndex2 = await oracle.getRequestIdByRequestQIndex(1);
+        apiIdforpayoutPoolIndex = await oracle.getRequestIdByRequestQIndex(50);
         req = await oracle.getRequestQ();
-        console.log(req)
-        console.log(apiIdforpayoutPoolIndex - 0,apiIdforpayoutPoolIndex2 - 0)
         assert(apiIdforpayoutPoolIndex == 2, "apiPool Index should be correct")
          for(var i = 1;i <=21 ;i++){
         	apix= ("api" + i);
-            await tellorToken.approve(oracle.address,i,{from:accounts[2]});
-            await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})
+            console.log(i)
+            console.log(await oracle.getRequestVars(2))
+            await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
+            await oracle.addTip((i+1),5+i,{from:accounts[2],gas:2000000});
         }
         for(var j = 15;j <= 45 ;j++){
         	apix= ("api" + j);
-            await tellorToken.approve(oracle.address,j,{from:accounts[2]});
-            await oracle.addTip(j+1,i,{from:accounts[2],gas:2000000})
+            await tellorToken.approve(oracle.address,5+j,{from:accounts[2]});
+            await oracle.addTip(j+1,5+j,{from:accounts[2],gas:2000000})
         } 
         req = await oracle.getRequestQ();
-        max = await utilities.testgetMax();
-        assert(web3.utils.hexToNumberString(max[0])== 45, "Max should be 45")
-        assert(web3.utils.hexToNumberString(max[1])== 6, "Max should be 6")
     });
 
     it("Test getMax payout and index 55 requests", async function () {
@@ -139,67 +136,53 @@ contract('Further Tests', function(accounts) {
         console.log("55 requests....");
          for(var i = 1;i <=55 ;i++){
         	apix= ("api" + i);
-            await tellorToken.approve(oracle.address,i,{from:accounts[2]});
+            await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
             console.log(i)
-            await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})
+            await oracle.addTip(i+1,5+i,{from:accounts[2],gas:2000000})
         }
 
-        req = await oracle.getRequestQ();
-        max = await utilities.testgetMax();
-        assert(web3.utils.hexToNumberString(max[0])== 55, "Max should be 55")
-        assert(web3.utils.hexToNumberString(max[1])== 46, "Max should be 46")    
+        req = await oracle.getRequestQ();   
     });
     it("Test getMax payout and index 100 requests", async function () {
         await tellorToken.mint(accounts[2],web3.utils.toWei("500"));
         console.log("55 requests....");
          for(var i = 1;i <=55 ;i++){
         	apix= ("api" + i);
-            await tellorToken.approve(oracle.address,i,{from:accounts[2]});
-            await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})
+            await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
+            await oracle.addTip(i+1,5+i,{from:accounts[2],gas:2000000})
          }
         for(var j = 50;j <= 95 ;j++){
         	apix= ("api" + j);
-            await tellorToken.approve(oracle.address,j,{from:accounts[2]});
-            await oracle.addTip(j+1,i,{from:accounts[2],gas:2000000})
+            await tellorToken.approve(oracle.address,5+j,{from:accounts[2]});
+            await oracle.addTip(j+1,5+j,{from:accounts[2],gas:2000000})
         } 
         req = await oracle.getRequestQ();
-        max = await utilities.testgetMax();
-        assert(web3.utils.hexToNumberString(max[0])== 110, "Max should be 110")
-        assert(web3.utils.hexToNumberString(max[1])== 46, "Max should be 46") 
+        assert(0 ==1)
     });
     it("utilities Test getMin payout and index 10 req with overlapping tips and requests", async function () {
    	    await tellorToken.mint(accounts[2],web3.utils.toWei("500"));
         apiVars= await oracle.getRequestVars(1);
          for(var i = 10;i >=1 ;i--){
         	apix= ("api" + i);
-            await tellorToken.approve(oracle.address,i,{from:accounts[2]});
-            await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})
+            await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
+            await oracle.addTip(i+1,5+i,{from:accounts[2],gas:2000000})
         }
 
         req = await oracle.getRequestQ();
-        min = await utilities.testgetMin();
-        assert(web3.utils.hexToNumberString(min[0])== 0, "Min should be 0")
-        assert(web3.utils.hexToNumberString(min[1])== 40, "Min should be 40")
+        assert(0 ==1)
     });
     it("Test getMin payout and index 51 req count down with overlapping tips and requests", async function () {
-   	    apiVars= await oracle.getRequestVars(1);
-        apiIdforpayoutPoolIndex = await oracle.getRequestIdByRequestQIndex(0);
-        apiId = await oracle.getRequestIdByQueryHash(apiVars[2]);
-        assert(web3.utils.hexToNumberString(apiId) == 1, "timestamp on Q should be 1");
         console.log("51 requests....");
          for(var i = 21;i >=1 ;i--){
         	apix= ("api" + i);
-        	await tellorToken.approve(oracle.address,i,{from:accounts[2]});
-            await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})}
+        	await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
+            await oracle.addTip(i+1,5+i,{from:accounts[2],gas:2000000})}
         for(var j = 45;j >= 15 ;j--){
         	apix= ("api" + j);
-        	await tellorToken.approve(oracle.address,j,{from:accounts[2]});
-            await oracle.addTip(j+1,i,{from:accounts[2],gas:2000000})
+        	await tellorToken.approve(oracle.address,5+j,{from:accounts[2]});
+            await oracle.addTip(j+1,5+j,{from:accounts[2],gas:2000000})
              } 
         req = await oracle.getRequestQ();
-        min = await utilities.testgetMin();
-        assert(web3.utils.hexToNumberString(min[0])== 0, "Min should be 0")
-        assert(web3.utils.hexToNumberString(min[1])== 5, "Min should be 5")
         assert(web3.utils.hexToNumberString(req[44])==30, "request 15 is submitted twice this should be 30")
         assert(web3.utils.hexToNumberString(req[50])==42, "request 21 is submitted twice this should be 42")
     });
@@ -219,10 +202,6 @@ contract('Further Tests', function(accounts) {
    //          await tellorToken.approve(oracle.address,j,{from:accounts[2]});
    //          await oracle.addTip(j+1,i,{from:accounts[2],gas:2000000})
    //      } 
-   //      req = await oracle.getRequestQ();
-   //      min = await utilities.testgetMin();
-   //      assert(web3.utils.hexToNumberString(min[0])== 1, "Min should be 1")
-   //      assert(web3.utils.hexToNumberString(min[1])== 30, "Min should be 30")
    //  });
    //  it("Test getMin payout and index 55 requests", async function () {
    //      console.log("55 requests....");
@@ -230,11 +209,8 @@ contract('Further Tests', function(accounts) {
    //      	apix= ("api" + i);
    //          await tellorToken.approve(oracle.address,i,{from:accounts[2]});
    //          await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})
-   //      }
-   //      req = await oracle.getRequestQ();
-   //      min = await utilities.testgetMin();
-   //      assert(web3.utils.hexToNumberString(min[0])== 6, "Min should be 6")
-   //      assert(web3.utils.hexToNumberString(min[1])== 45, "Min should be 45")    
+   //      } 
+   //         assert(0 ==1)
    //  });
    // it("Test 51 request and lowest is kicked out", async function () {
    // 	    apiVars= await oracle.getRequestVars(1)
