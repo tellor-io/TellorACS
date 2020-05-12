@@ -112,6 +112,6 @@ library TellorStorage {
         mapping(address => mapping(address => uint256)) allowed; //allowance for a given party and approver
         mapping(address => StakeInfo) stakerDetails; //mapping from a persons address to their staking info
         mapping(uint256 => Request) requestDetails; //mapping of apiID to details
-        mapping(bytes32 => uint256) disputeIdByDisputeHash; //maps a hash to an ID for each dispute
+        mapping(bytes32 => uint256[]) disputeIdsByDisputeHash; //maps a hash to an ID for each dispute
     }
 }
