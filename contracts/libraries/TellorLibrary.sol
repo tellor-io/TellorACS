@@ -267,19 +267,11 @@ event print(uint test);
             i++;
             r = randomnumber(self,self.stakers.length,i);
             potentialValidator = self.stakers[r];
-            if(_reset){
-                    self.selectedValidators.push(potentialValidator);
-                    emit NewValidatorsSelected(potentialValidator);
-                    self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
-                    j++; 
-            }
-            else{ //do we loop through and remove validValidator after block?
-                if(!self.validValidator[potentialValidator]){
+            if(!self.validValidator[potentialValidator]){
                     self.selectedValidators.push(potentialValidator);
                     emit NewValidatorsSelected(potentialValidator);
                     self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
                     j++;
-               }
             }
        }
          self.uintVars[keccak256("lastSelected")] = now;

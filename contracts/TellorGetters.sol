@@ -103,8 +103,8 @@ contract TellorGetters {
     * @param _hash is the sha256(abi.encodePacked(_miners[2],_requestId));
     * @return uint disputeId
     */
-    function getDisputeIdByDisputeHash(bytes32 _hash) external view returns (uint256) {
-        return tellor.getDisputeIdByDisputeHash(_hash);
+    function getDisputeIdsByDisputeHash(bytes32 _hash) external view returns (uint256[] memory) {
+        return tellor.getDisputeIdsByDisputeHash(_hash);
     }
 
     /**

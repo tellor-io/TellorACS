@@ -35,21 +35,20 @@ contract('ACS specific Tests', function(accounts) {
     assert(vars[2] == 2, "should be staked twice");
    });
    it("test multiple staking one address, removal of part", async function () {
-    await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
-    await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
-    console.log(await oracle.getUintVar(web3.utils.keccak256("uniqueStakers")))
-     assert(await oracle.getUintVar(web3.utils.keccak256("uniqueStakers")) == 6)
-      assert(await oracle.getUintVar(web3.utils.keccak256("stakerCount")) == 7)
-      assert(await oracle.getUintVar(web3.utils.keccak256("totalStaked")) == 700)
-    await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
-    await helper.advanceTime(86400 * 8);
-    await oracle.withdrawStake({from:accounts[5],gas:2000000})
-    assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('100'))
-    let vars = await oracle.getStakerInfo(accounts[5])
-     assert(await oracle.getUintVar(web3.utils.keccak256("uniqueStakers")) == 6)
-      assert(await oracle.getUintVar(web3.utils.keccak256("uniqueStakers")) == 6)
-      assert(await oracle.getUintVar(web3.utils.keccak256("totalStaked")) == 600)
-    assert(vars[2] == 1);
+    	await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[5]});
+    	await oracle.depositStake(web3.utils.toWei('200'),{from:accounts[5],gas:2000000})
+     	assert(await oracle.getUintVar(web3.utils.keccak256("uniqueStakers")) == 6, "uniqueStakers should be 6")
+      	assert(await oracle.getUintVar(web3.utils.keccak256("stakerCount")) == 7, "stakerCount should be 7")
+     	assert(await oracle.getUintVar(web3.utils.keccak256("totalStaked")) == web3.utils.toWei("700"), "total Staked should be 700")
+    	await oracle.requestStakingWithdraw(web3.utils.toWei('100'),{from:accounts[5],gas:2000000})
+    	await helper.advanceTime(86400 * 8);
+    	await oracle.withdrawStake({from:accounts[5],gas:2000000})
+    	assert(await oracle.balanceOf(accounts[5]) == web3.utils.toWei('100'))
+    	let vars = await oracle.getStakerInfo(accounts[5])
+     	assert(await oracle.getUintVar(web3.utils.keccak256("uniqueStakers")) == 6)
+      	assert(await oracle.getUintVar(web3.utils.keccak256("uniqueStakers")) == 6)
+      	assert(await oracle.getUintVar(web3.utils.keccak256("totalStaked")) == web3.utils.toWei("600"))
+    	assert(vars[2] == 1, "should be staked once");
    });
 
    /* where do we select initial validators--currently only in NewBlock...??*/
