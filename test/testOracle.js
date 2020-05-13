@@ -59,10 +59,11 @@
 //     });
 //     it("Test Is Data", async function () {
 //        let miners = await oracle.getCurrentMiners();
-//       for(var i = 0;i<5;i++){
-//         res = await oracle.submitMiningSolution(1,100 + i,{from:miners[i]});
-//       }
-//         res = res.logs[1].args['_time']
+//         for(var i = 0;i<5;i++){
+//           res = await oracle.submitMiningSolution(1,100 + i,{from:miners[i]});
+//         }
+//         console.log(res)
+//         res = res.logs['1'].args['_time']
 //   		  data = await oracle.getMinedBlockNum(1,res.logs[1].args['_time']);
 //         assert(data > 0, "Should be true if Data exist for that point in time");
 //     });
@@ -71,6 +72,7 @@
 //           await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
 //         }   
 // 		    res2 = await oracle.getLastNewValue();
+//         console.log(res2)
 //         assert(res2[0] == 103, "Ensure data exist for the last mine value");
 //     });
 //     it("Test Data Read", async function () {
@@ -80,26 +82,26 @@
 //         res2 = await oracle.retrieveData(1,res[0]);
 //  		    assert(res2 == 103, "Ensure data exist for the last mine value");
 //         res2 = await oracle.getTimestampbyRequestIDandIndex(1,0);
+//         console.log(res.logs[1].args['_time'])
 //         assert(res2 > res.logs[1].args['_time'], "Getting the timestamp should be correct");
 //     });
-//   //  it("Test Miner Payout", async function () {
-//   //       balances = []
-//   //       for(var i = 0;i<6;i++){
-//   //           balances[i] = await oracle.balanceOf(accounts[i]);
-//   //       }
-//   //       for(var i = 0;i<5;i++){
-//   //         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-//   //       }
-//   //       new_balances = []
-// 		// for(var i = 0;i<6;i++){
-//   //           new_balances[i] = await oracle.balanceOf(accounts[i]);
-//   //       }
-//   //       assert((web3.utils.hexToNumberString(new_balances[5]) - web3.utils.hexToNumberString(balances[5] == 1);
-//   //       assert((web3.utils.hexToNumberString(new_balances[1]) - web3.utils.hexToNumberString(balances[1])) == 1);
-//   //       assert((web3.utils.hexToNumberString(new_balances[2]) - web3.utils.hexToNumberString(balances[2])) == 1);
-//   //       assert((web3.utils.hexToNumberString(new_balances[3]) - web3.utils.hexToNumberString(balances[3])) == 1);
-//   //       assert((web3.utils.hexToNumberString(new_balances[4]) - web3.utils.hexToNumberString(balances[4])) == 1);
-//   //   });
+//    it("Test Miner Payout", async function () {
+//         await tellorToken.mint(accounts[0],web3.utils.toWei("500"));
+//         await tellorToken.approve(oracle.address,web3.utils.toWei("5")-5,{from:accounts[0]});
+//         await oracle.addTip(1,web3.utils.toWei("5")-5,{from:accounts[0],gas:2000000})
+//         balances = []
+//         for(var i = 0;i<6;i++){
+//             balances[i] = await tellorToken.balanceOf(accounts[i]);
+//         }
+//         for(var i = 0;i<5;i++){
+//           res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
+//         }
+//         new_balances = []
+// 		for(var i = 0;i<6;i++){
+//             new_balances[i] = await tellorToken.balanceOf(accounts[i]);
+//             assert(new_balances[i] - balances[i] == web3.utils.toWei("1"),i);
+//         }
+//     });
 //   //   it("Test didMine ", async function () {
 // 		//   vars = await oracle.getCurrentVariables();
 //   //     for(var i = 0;i<5;i++){

@@ -203,74 +203,74 @@
 //             await oracle.addTip(j+1,i,{from:accounts[2],gas:2000000})
 //         } 
 //     });
-//     it("Test getMin payout and index 55 requests", async function () {
-//         console.log("55 requests....");
-//          for(var i = 1;i <=55 ;i++){
-//         	apix= ("api" + i);
-//             await tellorToken.approve(oracle.address,i,{from:accounts[2]});
-//             await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})
-//         } 
-//            assert(0 ==1)
-//     });
-//    it("Test 51 request and lowest is kicked out", async function () {
-//    	    apiVars= await oracle.getRequestVars(1)
-//         apiIdforpayoutPoolIndex = await oracle.getRequestIdByRequestQIndex(0);
-//         apiId = await oracle.getRequestIdByQueryHash(apiVars[2]);
-//         assert(web3.utils.hexToNumberString(apiId) == 1, "timestamp on Q should be 1");
-//         console.log("51 requests....");
-//          for(var i = 1;i <=51 ;i++){
-//         	apix= ("api" + i);
-//             await tellorToken.approve(oracle.address,i,{from:accounts[2]});
-//             await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})}
-//         let payoutPool = await oracle.getRequestQ();
-//         for(var i = 2;i <=49 ;i++){
-//         	assert(payoutPool[i] == 51-i)
+//    //  it("Test getMin payout and index 55 requests", async function () {
+//    //      console.log("55 requests....");
+//    //       for(var i = 1;i <=55 ;i++){
+//    //      	apix= ("api" + i);
+//    //          await tellorToken.approve(oracle.address,i,{from:accounts[2]});
+//    //          await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})
+//    //      } 
+//    //         assert(0 ==1)
+//    //  });
+//    // it("Test 51 request and lowest is kicked out", async function () {
+//    // 	    apiVars= await oracle.getRequestVars(1)
+//    //      apiIdforpayoutPoolIndex = await oracle.getRequestIdByRequestQIndex(0);
+//    //      apiId = await oracle.getRequestIdByQueryHash(apiVars[2]);
+//    //      assert(web3.utils.hexToNumberString(apiId) == 1, "timestamp on Q should be 1");
+//    //      console.log("51 requests....");
+//    //       for(var i = 1;i <=51 ;i++){
+//    //      	apix= ("api" + i);
+//    //          await tellorToken.approve(oracle.address,i,{from:accounts[2]});
+//    //          await oracle.addTip(i+1,i,{from:accounts[2],gas:2000000})}
+//    //      let payoutPool = await oracle.getRequestQ();
+//    //      for(var i = 2;i <=49 ;i++){
+//    //      	assert(payoutPool[i] == 51-i)
 
-//         }
-//         apiVars= await oracle.getRequestVars(52)
-//         apiIdforpayoutPoolIndex = await oracle.getRequestIdByRequestQIndex(50);
-//         vars = await oracle.getVariablesOnDeck();
-//         let apiOnQ = web3.utils.hexToNumberString(vars['0']);
-//         let apiPayout = web3.utils.hexToNumberString(vars['1']);
-//         let sapi = vars['2'];
-//         apiIdforpayoutPoolIndex2 = await oracle.getRequestIdByRequestQIndex(49);
-//         assert(apiIdforpayoutPoolIndex == 52, "position 1 should be booted"); 
-//         assert(sapi == "api51", "API on Q string should be correct"); 
-//         assert(apiPayout == 51, "API on Q payout should be 51"); 
-//         assert(apiOnQ == 52, "API on Q should be 51"); 
-//         assert(apiVars[5] == 51, "position 1 should have correct value"); 
-//         assert(apiIdforpayoutPoolIndex2 == 3, "position 2 should be in same place"); 
-//    });
+//    //      }
+//    //      apiVars= await oracle.getRequestVars(52)
+//    //      apiIdforpayoutPoolIndex = await oracle.getRequestIdByRequestQIndex(50);
+//    //      vars = await oracle.getVariablesOnDeck();
+//    //      let apiOnQ = web3.utils.hexToNumberString(vars['0']);
+//    //      let apiPayout = web3.utils.hexToNumberString(vars['1']);
+//    //      let sapi = vars['2'];
+//    //      apiIdforpayoutPoolIndex2 = await oracle.getRequestIdByRequestQIndex(49);
+//    //      assert(apiIdforpayoutPoolIndex == 52, "position 1 should be booted"); 
+//    //      assert(sapi == "api51", "API on Q string should be correct"); 
+//    //      assert(apiPayout == 51, "API on Q payout should be 51"); 
+//    //      assert(apiOnQ == 52, "API on Q should be 51"); 
+//    //      assert(apiVars[5] == 51, "position 1 should have correct value"); 
+//    //      assert(apiIdforpayoutPoolIndex2 == 3, "position 2 should be in same place"); 
+//    // });
 
-//     it("Test Throw on wrong apiId", async function () {
-//     	await helper.expectThrow(oracle.submitMiningSolution(3,100));
-//         await oracle.submitMiningSolution(1,100); 
-//     });
-//     it("Test competing API requests - multiple switches in API on Queue", async function () {
-//             await tellorToken.approve(oracle.address,5,{from:accounts[2]});
-//             await oracle.addTip(2,5,{from:accounts[2],gas:2000000})
+//    //  it("Test Throw on wrong apiId", async function () {
+//    //  	await helper.expectThrow(oracle.submitMiningSolution(3,100));
+//    //      await oracle.submitMiningSolution(1,100); 
+//    //  });
+//    //  it("Test competing API requests - multiple switches in API on Queue", async function () {
+//    //          await tellorToken.approve(oracle.address,5,{from:accounts[2]});
+//    //          await oracle.addTip(2,5,{from:accounts[2],gas:2000000})
 
-//             await tellorToken.approve(oracle.address,5,{from:accounts[2]});
-//             await oracle.addTip(3,5,{from:accounts[2],gas:2000000})
+//    //          await tellorToken.approve(oracle.address,5,{from:accounts[2]});
+//    //          await oracle.addTip(3,5,{from:accounts[2],gas:2000000})
 
-//             await tellorToken.approve(oracle.address,6,{from:accounts[2]});
-//             await oracle.addTip(4,6,{from:accounts[2],gas:2000000})
+//    //          await tellorToken.approve(oracle.address,6,{from:accounts[2]});
+//    //          await oracle.addTip(4,6,{from:accounts[2],gas:2000000})
 
-//             await tellorToken.approve(oracle.address,5,{from:accounts[2]});
-//             await oracle.addTip(3,5,{from:accounts[2],gas:2000000})
+//    //          await tellorToken.approve(oracle.address,5,{from:accounts[2]});
+//    //          await oracle.addTip(3,5,{from:accounts[2],gas:2000000})
 
-//             await tellorToken.approve(oracle.address,5,{from:accounts[2]});
-//             await oracle.addTip(4,5,{from:accounts[2],gas:2000000})
+//    //          await tellorToken.approve(oracle.address,5,{from:accounts[2]});
+//    //          await oracle.addTip(4,5,{from:accounts[2],gas:2000000})
 
-//             await tellorToken.approve(oracle.address,5,{from:accounts[2]});
-//             await oracle.addTip(3,5,{from:accounts[2],gas:2000000})
+//    //          await tellorToken.approve(oracle.address,5,{from:accounts[2]});
+//    //          await oracle.addTip(3,5,{from:accounts[2],gas:2000000})
 
-//         vars = await oracle.getVariablesOnDeck();
-//         let apiOnQ = web3.utils.hexToNumberString(vars['0']);
-//         let apiPayout = web3.utils.hexToNumberString(vars['1']);
-//         let sapi = vars['2'];
-//         assert(apiOnQ == 2, "API on Q should be 2"); 
-//         assert(sapi == api2, "API on Q string should be correct"); 
-//         assert(apiPayout == 6, "API on Q payout should be 6"); 
-//     });
+//    //      vars = await oracle.getVariablesOnDeck();
+//    //      let apiOnQ = web3.utils.hexToNumberString(vars['0']);
+//    //      let apiPayout = web3.utils.hexToNumberString(vars['1']);
+//    //      let sapi = vars['2'];
+//    //      assert(apiOnQ == 2, "API on Q should be 2"); 
+//    //      assert(sapi == api2, "API on Q string should be correct"); 
+//    //      assert(apiPayout == 6, "API on Q payout should be 6"); 
+//    //  });
 //  });
