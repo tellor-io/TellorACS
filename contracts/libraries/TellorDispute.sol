@@ -43,14 +43,16 @@ library TellorDispute {
         //provided by the party initiating the dispute
         address _miner = _request.minersByValue[_timestamp][_minerIndex];
         bytes32 _hash = keccak256(abi.encodePacked(_miner, _requestId, _timestamp));
-
+                //maps the dispute hash to the disputeId
+        self.disputeIdsByDisputeHash[_hash].push(disputeId);
+        uint256 _fee = self.uintVars[keccak256("disputeFee")] * self.disputeIdsByDisputeHash[_hash].length**2;
         //Ensures that a dispute is not already open for the that miner, requestId and timestamp
-        require(self.disputeIdByDisputeHash[_hash] == 0, "Dispute is already open");
+        require(self.disputesById[self.disputeIdByDisputeHash[_hash][self.disputeIdsByDisputeHash[_hash].length -1]].disputeUintVars[keccak256("minExecutionDate")] < now, "Dispute is already open");
 
         //Transfer dispute fee
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
         if (self.stakerDetails[_miner].currentStatus > 0){
-            require(tellorToken.balanceOf(msg.sender)-self.uintVars[keccak256("stakeAmount")] >= self.uintVars[keccak256("disputeFee")], "The unstaked balance is too low to cover dispute fee");
+            require(tellorToken.balanceOf(msg.sender)-self.uintVars[keccak256("stakeAmount")] >= _fee, "The unstaked balance is too low to cover dispute fee");
             require(tellorToken.allowance(msg.sender,address(this)) >= self.uintVars[keccak256("disputeFee")]+self.uintVars[keccak256("stakeAmount")], "Proper amount must be allowed to this contract");
             tellorToken.transferFrom(msg.sender, address(this), self.uintVars[keccak256("disputeFee")]);
         } else {
@@ -66,8 +68,7 @@ library TellorDispute {
         //Sets the new disputeCount as the disputeId
         uint256 disputeId = self.uintVars[keccak256("disputeCount")];
 
-        //maps the dispute hash to the disputeId
-        self.disputeIdsByDisputeHash[_hash].push(disputeId);
+
         //maps the dispute to the Dispute struct
         self.disputesById[disputeId] = TellorStorage.Dispute({
             hash: _hash,
@@ -85,7 +86,7 @@ library TellorDispute {
         self.disputesById[disputeId].disputeUintVars[keccak256("minExecutionDate")] = now + 2 days * self.disputeIdsByDisputeHash[_hash].length;
         self.disputesById[disputeId].disputeUintVars[keccak256("blockNumber")] = block.number;
         self.disputesById[disputeId].disputeUintVars[keccak256("minerSlot")] = _minerIndex;
-        self.disputesById[disputeId].disputeUintVars[keccak256("fee")] = self.uintVars[keccak256("disputeFee")] * self.disputeIdsByDisputeHash[_hash].length;
+        self.disputesById[disputeId].disputeUintVars[keccak256("fee")] = _fee;
         //Values are sorted as they come in and the official value is the median of the first five
         //So the "official value" miner is always minerIndex==2. If the official value is being
         //disputed, it sets its status to inDispute(currentStatus = 3) so that users are made aware it is under dispute
@@ -167,24 +168,8 @@ library TellorDispute {
             if (disp.tally > 0) {
                 //Set the dispute state to passed/true
                 disp.disputeVotePassed = true;
-                stakes.currentStatus == 4;
-                //If the dispute was succeful(miner found guilty) then update the timestamp value to zero
-                //so that users don't use this datapoint
-                if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
-                    _request.finalValues[disp.disputeUintVars[keccak256("timestamp")]] = disp.value;
-                }
-                //If the vote for disputing a value is unsuccesful then update the miner status from being on
-                //dispute(currentStatus=3) to staked(currentStatus =1) and tranfer the dispute fee to the miner
-            } else {
-                //Update the miner's current status to staked(currentStatus = 1)
-                stakes.currentStatus = 1;
-                if(disp.disputeUintVars[keccak256("minerSlot")] == 2) {
-                    //note we still don't put timestamp back into array (is this an issue? (shouldn't be))
-                  _request.finalValues[disp.disputeUintVars[keccak256("timestamp")]] = disp.disputeUintVars[keccak256("value")];
-                }
-                //tranfer the dispute fee to the miner
-                if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
-                    _request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] = false;
+                if (stakes.currentStatus == 3){
+                    stakes.currentStatus = 4;
                 }
             }
         //update the dispute status to executed
@@ -194,10 +179,12 @@ library TellorDispute {
 
 
     function unlockDisputeFee (TellorStorage.TellorStorageStruct storage self, uint _disputeId) public {
-        TellorStorage.Dispute storage disp = self.disputesById[_disputeId];
+        uint256 _finalId = self.disputeIdsByDisputeHash[self.disputesById[_disputeId].hash][self.disputeIdsByDisputeHash[_hash].length - 1];
+        TellorStorage.Dispute storage disp = self.disputesById[_finalId];
         require(now - disp.disputeUintVars[keccak256("minExecutionDate")]> 1 days, "Time for voting haven't elapsed");
 
         //how to handle if they get disputed again?
+        // need to pass these tokens locked to the next round....
         if (disp.disputeVotePassed == true){
                 TellorStorage.StakeInfo storage stakes = self.stakerDetails[disp.reportedMiner];
                 //if reported miner stake has not been slashed yet, slash them and return the fee to reporting party
@@ -216,8 +203,19 @@ library TellorDispute {
                     }
                     self.uintVars[keccak256("totalStaked")] -= self.uintVars[keccak256("minimumStake")];
                     TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
-                    tellorToken.transfer(disp.reportingParty,self.uintVars[keccak256("minimumStake")] + disp.disputeUintVars[keccak256("fee")]);
-                    updateDisputeFee(self, _disputeId);
+                    for(uint i = self.disputeIdsByDisputeHash[disp.hash].length -1; i>=0 ; i++){
+                        uint256 _id = self.disputeIdsByDisputeHash[self.disputesById[_disputeId].hash][i];
+                        disp = self.disputesById[_id];
+                        if(i ==0){
+                            tellorToken.transfer(disp.reportingParty,self.uintVars[keccak256("minimumStake")] + disp.disputeUintVars[keccak256("fee")]);
+                        }
+                        else{
+                            tellorToken.transfer(disp.reportingParty,disp.disputeUintVars[keccak256("fee")]);
+                        }
+                        
+                    }
+                    
+                    updateDisputeFee(self);
                 //if reported miner stake was already slashed, return the fee to other reporting paties
                 } else if (stakes.currentStatus == 0){
                     TellorTransfer.doTransfer(self, address(this), disp.reportingParty, disp.disputeUintVars[keccak256("fee")]);
@@ -225,6 +223,22 @@ library TellorDispute {
                     tellorToken.transfer(disp.reportingParty,disp.disputeUintVars[keccak256("fee")]);
 
                 }
+            }
+            else{
+                stakes.currentStatus = 1;
+                if(disp.disputeUintVars[keccak256("minerSlot")] == 2) {
+                    //note we still don't put timestamp back into array (is this an issue? (shouldn't be))
+                  _request.finalValues[disp.disputeUintVars[keccak256("timestamp")]] = disp.disputeUintVars[keccak256("value")];
+                }
+                //tranfer the dispute fee to the miner
+                if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
+                    _request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] = false;
+                }
+                for(uint i = self.disputeIdsByDisputeHash[disp.hash].length -1; i>=0 ; i++){
+                        uint256 _id = self.disputeIdsByDisputeHash[self.disputesById[_disputeId].hash][i];
+                        disp = self.disputesById[_id];
+                        tellorToken.transfer(disp.reportedMiner,disp.disputeUintVars[keccak256("fee")]);                        
+                    }
             }
     }
 
@@ -235,7 +249,7 @@ library TellorDispute {
     * The floor for the fee is 15e18. The fee dobules with each dispute round and 
     * @param disputeId is the dispute Id for to update the fee for
     */
-    function updateDisputeFee(TellorStorage.TellorStorageStruct storage self, uint disputeId) public {
+    function updateDisputeFee(TellorStorage.TellorStorageStruct storage self) public {
         //if the number of staked miners divided by the target count of staked miners is less than 1
         if ((self.uintVars[keccak256("stakerCount")] * 1000) / self.uintVars[keccak256("targetMiners")] < 1000) {
             //Set the dispute fee at stakeAmt * (1- stakerCount/targetMiners)
