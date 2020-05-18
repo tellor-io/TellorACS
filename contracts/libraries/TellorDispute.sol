@@ -214,7 +214,7 @@ library TellorDispute {
             //or at the its minimum of 15e18
             self.uintVars[keccak256("disputeFee")] = SafeMath.max(
                 15e18,
-                self.uintVars[keccak256("stakeAmount")].mul(
+                self.uintVars[keccak256("minimumStake")].mul(
                     1000 - (self.uintVars[keccak256("stakerCount")] * 1000) / self.uintVars[keccak256("targetMiners")]
                 ) /
                     1000
