@@ -145,7 +145,7 @@ library TellorDispute {
 
     function unlockDisputeFee (TellorStorage.TellorStorageStruct storage self, uint _disputeId) public {
         bytes32 _hash = self.disputesById[_disputeId].hash;
-        uint256 _finalId = self.disputeIdsByDisputeHash[_hash][0];
+        uint256 _finalId = self.disputeIdsByDisputeHash[_hash][self.disputeIdsByDisputeHash[_hash].length - 1];
         TellorStorage.Dispute storage disp = self.disputesById[_finalId];
         require(now - disp.disputeUintVars[keccak256("tallyDate")] > 1 days, "Time for voting haven't elapsed");
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
@@ -153,9 +153,8 @@ library TellorDispute {
         if (disp.disputeVotePassed == true){
                 //if reported miner stake has not been slashed yet, slash them and return the fee to reporting party
                 if (stakes.currentStatus == 4) {
-                    //Changing the currentStatus and startDate unstakes the reported miner and allows for the
-                    //transfer of the stakeAmount
-                   self.uintVars[keccak256("stakerCount")] -= 1;
+                    //Changing the currentStatus and startDate unstakes the reported miner and transfers the stakeAmount
+                    self.uintVars[keccak256("stakerCount")] -= 1;
                     stakes.startDate = now - (now % 86400);
                     TellorStake.removeFromStakerArray(self, stakes.stakePosition[0],disp.reportedMiner);
                     //Decreases the stakerCount since the miner's stake is being slashed
@@ -167,17 +166,16 @@ library TellorDispute {
                         stakes.currentStatus = 1;
                     }
                     self.uintVars[keccak256("totalStaked")] -= self.uintVars[keccak256("minimumStake")];
-                    for(uint i = 0; i< self.disputeIdsByDisputeHash[disp.hash].length;i++){
+                    for(uint i = 1; i <= self.disputeIdsByDisputeHash[disp.hash].length;i++){
                         uint256 _id = self.disputeIdsByDisputeHash[_hash][i-1];
                         disp = self.disputesById[_id];
-                        if(i ==  self.disputeIdsByDisputeHash[disp.hash].length - 1){
+                        if(i == 1){
                             tellorToken.transfer(disp.reportingParty,self.uintVars[keccak256("minimumStake")] + disp.disputeUintVars[keccak256("fee")]);
                         }
                         else{
                             tellorToken.transfer(disp.reportingParty,disp.disputeUintVars[keccak256("fee")]);
                         }
                     }
-                updateDisputeFee(self);
                 //if reported miner stake was already slashed, return the fee to other reporting paties
                 } else if (stakes.currentStatus == 0){
                     TellorTransfer.doTransfer(self, address(this), disp.reportingParty, disp.disputeUintVars[keccak256("fee")]);
@@ -201,27 +199,5 @@ library TellorDispute {
                         tellorToken.transfer(disp.reportedMiner,disp.disputeUintVars[keccak256("fee")]);                        
                     }
             }
-    }
-
-   /**
-    * @dev this function allows the dispute fee to fluctuate based on the number of miners on the system.
-    * The floor for the fee is 15e18. The fee dobules with each dispute round and 
-    */
-    function updateDisputeFee(TellorStorage.TellorStorageStruct storage self) public {
-        //if the number of staked miners divided by the target count of staked miners is less than 1
-        if ((self.uintVars[keccak256("stakerCount")] * 1000) / self.uintVars[keccak256("targetMiners")] < 1000) {
-            //Set the dispute fee at stakeAmt * (1- stakerCount/targetMiners)
-            //or at the its minimum of 15e18
-            self.uintVars[keccak256("disputeFee")] = SafeMath.max(
-                15e18,
-                self.uintVars[keccak256("minimumStake")].mul(
-                    1000 - (self.uintVars[keccak256("stakerCount")] * 1000) / self.uintVars[keccak256("targetMiners")]
-                ) /
-                    1000
-            );
-        } else {
-            //otherwise set the dispute fee at 15e18 (the floor/minimum fee allowed)
-            self.uintVars[keccak256("disputeFee")] = 15e18;
-        }
     }
 }   
