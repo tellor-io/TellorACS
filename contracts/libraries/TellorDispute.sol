@@ -47,8 +47,8 @@ library TellorDispute {
         //Sets the new disputeCount as the disputeId
         uint256 disputeId = self.uintVars[keccak256("disputeCount")];
         //maps the dispute hash to the disputeId
+        uint256 _fee = self.uintVars[keccak256("disputeFee")] * 2**self.disputeIdsByDisputeHash[_hash].length;
         self.disputeIdsByDisputeHash[_hash].push(disputeId);
-        uint256 _fee = self.uintVars[keccak256("disputeFee")] * self.disputeIdsByDisputeHash[_hash].length**2;
         //Ensures that a dispute is not already open for the that miner, requestId and timestamp
         require(self.disputesById[self.disputeIdsByDisputeHash[_hash][0]].disputeUintVars[keccak256("minExecutionDate")] < now, "Dispute is already open");
         //Transfer dispute fee
@@ -124,6 +124,7 @@ library TellorDispute {
         TellorStorage.Dispute storage disp = self.disputesById[_disputeId];
         //Ensure this has not already been executed/tallied
         require(disp.executed == false, "Dispute has been already executed");
+        require(disp.reportingParty != address(0));
         //Ensure the time for voting has elapsed
         require(now > disp.disputeUintVars[keccak256("minExecutionDate")], "Time for voting haven't elapsed");
             TellorStorage.StakeInfo storage stakes = self.stakerDetails[disp.reportedMiner];
@@ -143,15 +144,19 @@ library TellorDispute {
     }
 
 
+event Print(string _a, uint _b);
+
     function unlockDisputeFee (TellorStorage.TellorStorageStruct storage self, uint _disputeId) public {
         bytes32 _hash = self.disputesById[_disputeId].hash;
         uint256 _finalId = self.disputeIdsByDisputeHash[_hash][self.disputeIdsByDisputeHash[_hash].length - 1];
+        emit Print("final ID", _finalId);
         TellorStorage.Dispute storage disp = self.disputesById[_finalId];
         require(now - disp.disputeUintVars[keccak256("tallyDate")] > 1 days, "Time for voting haven't elapsed");
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
         TellorStorage.StakeInfo storage stakes = self.stakerDetails[disp.reportedMiner];
         if (disp.disputeVotePassed == true){
                 //if reported miner stake has not been slashed yet, slash them and return the fee to reporting party
+                emit Print('status',stakes.currentStatus);
                 if (stakes.currentStatus == 4) {
                     //Changing the currentStatus and startDate unstakes the reported miner and transfers the stakeAmount
                     self.uintVars[keccak256("stakerCount")] -= 1;

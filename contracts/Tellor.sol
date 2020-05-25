@@ -17,7 +17,6 @@ contract Tellor is TellorGetters{
     /*Functions*/
     constructor (address _tellorToken) public {
         tellor.uintVars[keccak256("decimals")] = 18;
-        tellor.uintVars[keccak256("targetMiners")] = 200;
         tellor.uintVars[keccak256("disputeFee")] = 10e18;
         tellor.uintVars[keccak256("minimumStake")] = 100e18;
         tellor.addressVars[keccak256("tellorToken")] = _tellorToken;

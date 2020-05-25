@@ -61,21 +61,21 @@ contract('Token and Staking Function Tests', function(accounts) {
     it("Three dispute rounds with increased deposits (minting) for voting each time", async function(){
     	await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[2]});
       await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[2],gas:2000000})
+            await tellorToken.mint(accounts[1],web3.utils.toWei("500"));
       let vars = await oracle.getStakerInfo(accounts[2])
       assert(vars[2] == 2, "should only be staked once now");
       for(var i = 0;i<5;i++){
         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
       }
       await tellorToken.mint(accounts[1],web3.utils.toWei("500"));
-      balance1 = await oracle.balanceOf(accounts[2]) + await tellorToken.balanceOf(accounts[2]);
-      console.log(await oracle.balanceOf(accounts[2]))
-      dispBal1 = await tellorToken.balanceOf(accounts[1]) + await oracle.balanceOf(accounts[1]);
-      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});
+       balance1 = web3.utils.fromWei(await oracle.balanceOf(accounts[2]))*1 +web3.utils.fromWei(await tellorToken.balanceOf(accounts[2]))*1;
+      dispBal1 = web3.utils.fromWei(await oracle.balanceOf(accounts[1]))*1 +web3.utils.fromWei(await tellorToken.balanceOf(accounts[1]))*1;
+      await tellorToken.approve(oracle.address,web3.utils.toWei('10','ether'),{from:accounts[1]});
       await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1],gas:2000000});
       count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
       //vote 1 passes
       await oracle.vote(1,true,{from:accounts[3],gas:2000000})
-      await helper.advanceTime(86400 * 22);
+      await helper.advanceTime(86400 * 3);
       await oracle.tallyVotes(1,{from:accounts[0],gas:2000000})
       await helper.expectThrow(oracle.unlockDisputeFee(1,{from:accounts[0],gas:2000000})) //try to withdraw
         dispInfo = await oracle.getAllDisputeVars(1);
@@ -83,38 +83,35 @@ contract('Token and Staking Function Tests', function(accounts) {
       	assert(dispInfo[2] == true,"Dispute Vote passed")
       //vote 2 - fails
       await tellorToken.mint(accounts[6],web3.utils.toWei("500"));
-      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[6]});
+      await tellorToken.approve(oracle.address,web3.utils.toWei('20','ether'),{from:accounts[6]});
       await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[6],gas:2000000});
       count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
       await oracle.vote(2,false,{from:accounts[6],gas:2000000})
       await oracle.vote(2,true,{from:accounts[4],gas:2000000})
-      await helper.advanceTime(86400 * 22);
+      await helper.advanceTime(86400 * 5);
       await oracle.tallyVotes(2,{from:accounts[0],gas:2000000})
        dispInfo = await oracle.getAllDisputeVars(2);
       assert(dispInfo[2] == false,"Dispute Vote failed")
       // vote 3 - passes
-      await tellorToken.mint(accounts[1],web3.utils.toWei("500"));
-      await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});
+      await tellorToken.approve(oracle.address,web3.utils.toWei('40','ether'),{from:accounts[1]});
       await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1],gas:2000000});
       count = await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
       await oracle.vote(3,false,{from:accounts[6],gas:2000000})
       await oracle.vote(3,true,{from:accounts[1],gas:2000000})
       await oracle.vote(3,true,{from:accounts[4],gas:2000000})
-      await helper.advanceTime(86400 * 22);
-      await oracle.tallyVotes(4,{from:accounts[0],gas:2000000})
-      await helper.advanceTime(86400 * 2)
+      await helper.advanceTime(86400 * 9);
+      await oracle.tallyVotes(3,{from:accounts[0],gas:2000000})
+      await helper.advanceTime(86400 * 2 )
       dispInfo = await oracle.getAllDisputeVars(1);
       assert(dispInfo[2] == true,"Dispute Vote passed")
       await oracle.unlockDisputeFee(1,{from:accounts[0],gas:2000000})
       dispInfo = await oracle.getAllDisputeVars(1);
       assert(dispInfo[2] == true,"Dispute Vote passed")
-      console.log(await oracle.balanceOf(accounts[2]))
-      balance2 = await oracle.balanceOf(accounts[2]) +await tellorToken.balanceOf(accounts[2]);
-      dispBal2 = await tellorToken.balanceOf(accounts[1]) + await oracle.balanceOf(accounts[1])
-      console.log(web3.utils.fromWei(balance2), web3.utils.fromWei(balance1))
+       balance2 = web3.utils.fromWei(await oracle.balanceOf(accounts[2]))*1 +web3.utils.fromWei(await tellorToken.balanceOf(accounts[2]))*1;
+      dispBal2 = web3.utils.fromWei(await oracle.balanceOf(accounts[1]))*1 +web3.utils.fromWei(await tellorToken.balanceOf(accounts[1]))*1;
       dispBal6 = await tellorToken.balanceOf(accounts[6])
-      assert(balance1 - balance2 == await oracle.getUintVar(web3.utils.keccak256("minimumStake")),"reported miner's balance should change correctly");
-      assert(dispBal2 - dispBal1 == await oracle.getUintVar(web3.utils.keccak256("minimumStake")), "disputing party's balance should change correctly")
+      assert(balance1 - balance2 == web3.utils.fromWei(await oracle.getUintVar(web3.utils.keccak256("minimumStake")))*1,"reported miner's balance should change correctly");
+      assert(dispBal2 - dispBal1 == web3.utils.fromWei(await oracle.getUintVar(web3.utils.keccak256("minimumStake")))*1, "disputing party's balance should change correctly")
       assert(await oracle.balanceOf(accounts[2]) == web3.utils.toWei('100'),"Account 2 balance should be correct")
       vars = await oracle.getStakerInfo(accounts[2])
       assert(vars[2] == 1, "should only be staked once now");
@@ -176,16 +173,5 @@ contract('Token and Staking Function Tests', function(accounts) {
       await tellorToken.approve(oracle.address,web3.utils.toWei('200','ether'),{from:accounts[1]});
       await oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1],gas:2000000});
       assert(await oracle.retrieveData(1,res.logs[1].args['_time']) == 0, "data should be 0, it's under dispute")
-    });
-    it("Test Changing Dispute Fee", async function () {
-        await tellorToken.mint(accounts[6],web3.utils.toWei("500"));
-        await tellorToken.mint(accounts[7],web3.utils.toWei("500"));
-        var disputeFee1 = await oracle.getUintVar(web3.utils.keccak256("disputeFee"))
-        await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[6]});
-        await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[6],gas:2000000})
-        await tellorToken.approve(oracle.address,web3.utils.toWei('100','ether'),{from:accounts[7]});
-        await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[7],gas:2000000})
-        console.log(web3.utils.fromWei(await oracle.getUintVar(web3.utils.keccak256("disputeFee"))),web3.utils.fromWei(disputeFee1))
-       assert(await oracle.getUintVar(web3.utils.keccak256("disputeFee")) < disputeFee1,"disputeFee should change");
     });
  });
