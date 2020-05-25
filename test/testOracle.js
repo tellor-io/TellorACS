@@ -142,64 +142,82 @@ contract('Oracle Tests', function(accounts) {
       var time0 =  res.logs['1'].args['_time']     
 		  miners = await oracle.getMinersByRequestIdAndTimestamp(1, time0);
       console.log('miners', miners)
-      assert(miners ==[accounts[0],accounts[1],accounts[2],accounts[3],accounts[4]])
+      assert(miners[0] ==web3.utils.toChecksumAddress(accounts[0]), "miner0 is miner 0")
+      assert(miners[1] ==web3.utils.toChecksumAddress(accounts[1]), "miner1 is miner 1")
+      assert(miners[2] ==web3.utils.toChecksumAddress(accounts[2]), "miner2 is miner 2")
+      assert(miners[3] ==web3.utils.toChecksumAddress(accounts[3]), "miner3 is miner 3")
+      assert(miners[4] ==web3.utils.toChecksumAddress(accounts[4]), "miner4 is miner 4")
+
     });
-  //   it("Test miner, alternating api request on Q and auto select", async function () {
-  //     for(var i = 0;i<5;i++){
-  //       res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-  //     }
-  //     await tellorToken.approve(oracle.address,5,{from:accounts[0]});
-  //       await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
-  //     for(var i = 0;i<5;i++){
-  //       res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-  //     }
-  //      await tellorToken.approve(oracle.address,5,{from:accounts[0]});
-  //       await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
-  //       data = await oracle.getVariablesOnDeck();
-  //       assert(data[0] == 0, 'There should be no API on Q');
-  //       var vars = await oracle.getCurrentVariables();
-  //       assert(vars[1] == 1, "miningApiId should be 1");
-  //       await tellorToken.approve(oracle.address,5,{from:accounts[0]});
-  //       await oracle.addTip(2,5,{from:accounts[0],gas:2000000})
-  //       data = await oracle.getVariablesOnDeck();
-  //       assert(data[0] == 2, "API on q should be #2");
-  //       await tellorToken.approve(oracle.address,5,{from:accounts[0]});
-  //       await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
-  //       data = await oracle.getVariablesOnDeck();
-  //       assert(data[0] == 1, "API on q should be #1");
-  //   });
+    it("Test miner, alternating api request on Q and auto select", async function () {
+      for(var i = 0;i<5;i++){
+        res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
+      }
+      console.log("mining 1")
+      await tellorToken.approve(oracle.address,5,{from:accounts[0]});
+      console.log("approve1")
+        await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
+        console.log("addtip 1")
+      for(var i = 0;i<5;i++){
+        res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
+      }
+      console.log("mining 2")
+       await tellorToken.approve(oracle.address,5,{from:accounts[0]});
+       console.log("approve 2")
+        await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
+        console.log("addtip 2")
+        data = await oracle.getVariablesOnDeck();
+        assert(data[0] == 0, 'There should be no API on Q');
+        var vars = await oracle.getCurrentVariables();
+        assert(vars[1] == 1, "miningApiId should be 1");
+        await tellorToken.approve(oracle.address,5,{from:accounts[0]});
+        await oracle.addTip(2,5,{from:accounts[0],gas:2000000})
+        data = await oracle.getVariablesOnDeck();
+        assert(data[0] == 2, "API on q should be #2");
+        await tellorToken.approve(oracle.address,5,{from:accounts[0]});
+        await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
+        data = await oracle.getVariablesOnDeck();
+        assert(data[0] == 1, "API on q should be #1");
+    });
     
-  //   it("Test dispute", async function () {
-  //       for(var i = 0;i<5;i++){
-  //         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-  //       }
-  //       res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)     
-  //       balance1 = await oracle.balanceOf(accounts[2]);
-  //       blocknum = await oracle.getMinedBlockNum(1,res[0]);
-  //       await tellorToken.mint(accounts[1],web3.utils.toWei("5000"));
-  //       dispBal1 = await tellorToken.balanceOf(accounts[1])
-		//     await  oracle.beginDispute(1,res[0],2,{from:accounts[1]});
-  //       await oracle.vote(1,true,{from:accounts[3]});
-  //       await helper.advanceTime(86400 * 22);
-  //       await oracle.tallyVotes(1);
-  //       dispInfo = await oracle.getAllDisputeVars(1);
-  //       assert(dispInfo[7][0] == 1)
-  //       assert(dispInfo[7][1] == res[0])
-  //       assert(dispInfo[7][2] == res[1])
-  //       assert(dispInfo[2] == true,"Dispute Vote passed")
-  //       voted = await oracle.didVote(1, accounts[3]);
-  //       assert(voted == true, "account 3 voted");
-  //       voted = await oracle.didVote(1, accounts[5]);
-  //       assert(voted == false, "account 5 did not vote");
-  //       apid2valueF = await oracle.retrieveData(1,res[0]);
-  //       assert(apid2valueF == 0 ,"value should now be zero this checks updateDisputeValue-internal fx  works");
-  //       balance2 = await oracle.balanceOf(accounts[2]);
-  //       dispBal2 = await oracle.balanceOf(accounts[1])
-  //       assert(balance1 - balance2 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")),"reported miner's balance should change correctly");
-  //       assert(dispBal2 - dispBal1 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")), "disputing party's balance should change correctly")
-  //       s =  await oracle.getStakerInfo(accounts[2])
-  //       assert(s != 1, " Not staked" );
-  //   });
+    it("Test dispute", async function () {
+        for(var i = 0;i<5;i++){
+          res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
+        }
+        console.log("mining 1")
+        var time0 =  res.logs['1'].args['_time']     
+        balance1 = await oracle.balanceOf(accounts[2]);
+        console.log("balance 1")
+        blocknum = await oracle.getMinedBlockNum(1,time0);
+        console.log("blocknum")
+        await tellorToken.mint(accounts[1],web3.utils.toWei("5000"));
+        console.log("mint")
+        dispBal1 = await tellorToken.balanceOf(accounts[1])
+        console.log("dispBal1")
+		    await  oracle.beginDispute(1,time0,2,{from:accounts[1]});
+        console.log("begin dispute")
+        await oracle.vote(1,true,{from:accounts[3]});
+        console.log("vote")
+        await helper.advanceTime(86400 * 22);
+        await oracle.tallyVotes(1);
+        dispInfo = await oracle.getAllDisputeVars(1);
+        assert(dispInfo[7][0] == 1)
+        assert(dispInfo[7][1] == time0)
+        assert(dispInfo[7][2] == res[1])
+        assert(dispInfo[2] == true,"Dispute Vote passed")
+        voted = await oracle.didVote(1, accounts[3]);
+        assert(voted == true, "account 3 voted");
+        voted = await oracle.didVote(1, accounts[5]);
+        assert(voted == false, "account 5 did not vote");
+        apid2valueF = await oracle.retrieveData(1,time0);
+        assert(apid2valueF == 0 ,"value should now be zero this checks updateDisputeValue-internal fx  works");
+        balance2 = await oracle.balanceOf(accounts[2]);
+        dispBal2 = await oracle.balanceOf(accounts[1])
+        assert(balance1 - balance2 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")),"reported miner's balance should change correctly");
+        assert(dispBal2 - dispBal1 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")), "disputing party's balance should change correctly")
+        s =  await oracle.getStakerInfo(accounts[2])
+        assert(s != 1, " Not staked" );
+    });
   //   it("Test multiple dispute to one miner", async function () {
   //      for(var i = 0;i<5;i++){
   //       res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
