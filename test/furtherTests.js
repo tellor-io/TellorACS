@@ -124,7 +124,12 @@ contract('Further Tests', function(accounts) {
             await oracle.addTip(j+1,5+j,{from:accounts[2],gas:2000000})
         } 
         req = await oracle.getRequestQ();
-        assert(0==1)
+        max = Math.max.apply(null, req) 
+        console.log(max)
+        assert(max==50, "max should be correct")
+        vars = await oracle.getVariablesOnDeck();
+        assert(vars['0'] == 46, "should be 46")
+        assert(vars['1'] == web3.utils.toWei("50"), "2Current payout on Q should be 50");   
     });
 
     it("Test getMax payout and index 55 requests", async function () {

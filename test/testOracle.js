@@ -158,26 +158,25 @@ contract('Oracle Tests', function(accounts) {
     it("Test dispute", async function () {
         for(var i = 0;i<5;i++){
           res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-        }
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)     
+        }  
         balance1 = await oracle.balanceOf(accounts[2]);
-        blocknum = await oracle.getMinedBlockNum(1,res[0]);
+        blocknum = await oracle.getMinedBlockNum(1,res.logs[1].args['_time']);
         await tellorToken.mint(accounts[1],web3.utils.toWei("5000"));
         dispBal1 = await tellorToken.balanceOf(accounts[1])
-		    await  oracle.beginDispute(1,res[0],2,{from:accounts[1]});
+		    await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1]});
         await oracle.vote(1,true,{from:accounts[3]});
         await helper.advanceTime(86400 * 22);
         await oracle.tallyVotes(1);
         dispInfo = await oracle.getAllDisputeVars(1);
         assert(dispInfo[7][0] == 1)
-        assert(dispInfo[7][1] == res[0])
+        assert(dispInfo[7][1] == res.logs[1].args['_time'])
         assert(dispInfo[7][2] == res[1])
         assert(dispInfo[2] == true,"Dispute Vote passed")
         voted = await oracle.didVote(1, accounts[3]);
         assert(voted == true, "account 3 voted");
         voted = await oracle.didVote(1, accounts[5]);
         assert(voted == false, "account 5 did not vote");
-        apid2valueF = await oracle.retrieveData(1,res[0]);
+        apid2valueF = await oracle.retrieveData(1,res.logs[1].args['_time']);
         assert(apid2valueF == 0 ,"value should now be zero this checks updateDisputeValue-internal fx  works");
         balance2 = await oracle.balanceOf(accounts[2]);
         dispBal2 = await oracle.balanceOf(accounts[1])
@@ -189,10 +188,9 @@ contract('Oracle Tests', function(accounts) {
     it("Test multiple dispute to one miner", async function () {
        for(var i = 0;i<5;i++){
         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-       }//or Event Mine?
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)     
+       }//or Event Mine? 
         balance1 = await oracle.balanceOf(accounts[2]);
-        blocknum = await oracle.getMinedBlockNum(1,res[0]);
+        blocknum = await oracle.getMinedBlockNum(1,res.logs[1].args['_time']);
         await tellorToken.mint(accounts[0],web3.utils.toWei("5000"));
         await tellorToken.mint(accounts[1],web3.utils.toWei("5000"));
         await tellorToken.mint(accounts[4],web3.utils.toWei("5000"));
@@ -201,9 +199,8 @@ contract('Oracle Tests', function(accounts) {
           await tellorToken.approve(oracle.address,5,{from:accounts[0]});
           await oracle.addTip(2,5,{from:accounts[0],gas:2000000})
           for(var i = 0;i<5;i++){
-              res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
+              resVars[i] = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
             }
-            resVars[i] = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
             await helper.advanceTime(1000);
         }
         dispBal1 = await oracle.balanceOf(accounts[1])
@@ -217,7 +214,7 @@ contract('Oracle Tests', function(accounts) {
         await oracle.tallyVotes(1)
         dispInfo = await oracle.getAllDisputeVars(1);
         assert(dispInfo[7][0] == 1)
-        assert(dispInfo[7][1] == resVars[0][0])
+        assert(dispInfo[7][1] == resVars[0][0])//need to fix, was the decode parameter things
         assert(dispInfo[7][2] == resVars[0][1])
         assert(dispInfo[2] == true,"Dispute Vote passed")
         voted = await oracle.didVote(1, accounts[3]);
@@ -257,8 +254,7 @@ contract('Oracle Tests', function(accounts) {
 		for(var i = 0;i<5;i++){
         	res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
       	}
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
-        data = await oracle.getMinedBlockNum(2,res[0]);
+        data = await oracle.getMinedBlockNum(2,res.logs[1].args['_time']);
 
         assert(data>0, "Should be true if Data exist for that point in time");
         console.log("10 then mine requests....");
@@ -270,11 +266,10 @@ contract('Oracle Tests', function(accounts) {
             }
                     await tellorToken.approve(oracle.address,26,{from:accounts[0]});
         await oracle.addTip(2,26,{from:accounts[0],gas:2000000})
-		for(var i = 0;i<5;i++){
+		    for(var i = 0;i<5;i++){
         	res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
         }
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
-        data = await oracle.getMinedBlockNum(1,res[0]);
+        data = await oracle.getMinedBlockNum(1,res.logs[1].args['_time']);
         assert(data > 0, "Should be true if Data exist for that point in time");
         console.log("10 then mine requests....");
          for(var i = 21;i <=30 ;i++){
@@ -286,28 +281,26 @@ contract('Oracle Tests', function(accounts) {
         await oracle.addTip(1,36,{from:accounts[0],gas:2000000})
         for(var i = 0;i<5;i++){
         	res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-      }
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
-        data = await oracle.getMinedBlockNum(2,res[0]);
+        }
+        data = await oracle.getMinedBlockNum(2,res.logs[1].args['_time']);
         assert(data > 0, "Should be true if Data exist for that point in time");
         console.log("10 then mine requests....");
-         for(var i = 31;i <=40 ;i++){
-            apix= ("api" + i);
-            await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
+        for(var i = 31;i <=40 ;i++){
+          apix= ("api" + i);
+          await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
         	await oracle.addTip(2+i,5+i,{from:accounts[2],gas:2000000})
         }
-                    await tellorToken.approve(oracle.address,46,{from:accounts[2]});
-        	await oracle.addTip(2,46,{from:accounts[2],gas:2000000})
+        await tellorToken.approve(oracle.address,46,{from:accounts[2]});
+        await oracle.addTip(2,46,{from:accounts[2],gas:2000000})
         for(var i = 0;i<5;i++){
         	res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
       	}
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
-        data = await oracle.getMinedBlockNum(1,res[0]);
+        data = await oracle.getMinedBlockNum(1,res.logs[1].args['_time']);
         assert(data > 0, "Should be true if Data exist for that point in time");
         console.log("10 then mine requests....");
-         for(var i =41;i <=55 ;i++){
-            apix= ("api" + i);
-                        await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
+        for(var i =41;i <=55 ;i++){
+          apix= ("api" + i);
+          await tellorToken.approve(oracle.address,5+i,{from:accounts[2]});
         	await oracle.addTip(2+i,5+i,{from:accounts[2],gas:2000000})
         }
         await tellorToken.approve(oracle.address,61,{from:accounts[2]});
@@ -317,8 +310,7 @@ contract('Oracle Tests', function(accounts) {
               for(var i = 0;i<5;i++){
         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
       }
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
-        data = await oracle.getMinedBlockNum(2,res[0]);
+        data = await oracle.getMinedBlockNum(2,res.logs[1].args['_time']);
         assert(data > 0, "Should be true if Data exist for that point in time");
         apiVars = await oracle.getRequestVars(52)
         apiIdforpayoutPoolIndex = await oracle.getRequestIdByRequestQIndex(50);
@@ -335,17 +327,16 @@ contract('Oracle Tests', function(accounts) {
         assert(apiIdforpayoutPoolIndex2 == 54, "position 2 should be in same place"); 
     });
     it("Test Throw on Multiple Disputes", async function () {
-              for(var i = 0;i<5;i++){
-        res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-      }//or Event Mine?
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)     
-		balance1 = await (oracle.balanceOf(accounts[2],{from:accounts[4]}));
-        blocknum = await oracle.getMinedBlockNum(1,res[0]);
-        await web3.eth.sendTransaction({to:oracle.address,from:accounts[0],gas:7000000,data:oracle2.methods.theLazyCoon(accounts[1],web3.utils.toWei('5000', 'ether')).encodeABI()})
-        await  web3.eth.sendTransaction({to: oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.beginDispute(1,res[0],2).encodeABI()});
-        await helper.expectThrow(web3.eth.sendTransaction({to: oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.beginDispute(1,res[0],2).encodeABI()}));
-        let miners =await oracle.getMinersByRequestIdAndTimestamp(1,res[0]);
-        let _var = await oracle.getDisputeIdByDisputeHash( web3.utils.soliditySha3({t:'address',v:miners[2]},{t:'uint256',v:1},{t:'uint256',v:res[0]}));
+        for(var i = 0;i<5;i++){
+          res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
+        }   
+		    balance1 = await (oracle.balanceOf(accounts[2],{from:accounts[4]}));
+        blocknum = await oracle.getMinedBlockNum(1,res.logs[1].args['_time']);
+        await tellorToken.mint(accounts[1],web3.utils.toWei('5000', 'ether'));
+        await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1]});
+        await helper.expectThrow(oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1]}));
+        let miners =await oracle.getMinersByRequestIdAndTimestamp(1,res.logs[1].args['_time']);
+        let _var = await oracle.getDisputeIdByDisputeHash( web3.utils.soliditySha3({t:'address',v:miners[2]},{t:'uint256',v:1},{t:'uint256',v:res.logs[1].args['_time']}));
         assert(_var == 1, "hash should be same");
     });
     it("Test Dispute of different miner Indexes", async function () {
@@ -365,44 +356,39 @@ contract('Oracle Tests', function(accounts) {
         		j = 4;
         		k = j -1;
         	}
-	        oracle = await TellorMaster.new(oracleBase.address);
-	        oracle2 = await new web3.eth.Contract(oracleAbi,oracle.address);///will this instance work for logWatch? hopefully...
-       		//await web3.eth.sendTransaction({to: oracle.address,from:accounts[0],gas:7000000,data:oracle2.methods.init().encodeABI()})
-	                    await tellorToken.approve(oracle.address,5,{from:accounts[0]});
+	        await tellorToken.approve(oracle.address,5,{from:accounts[0]});
         	await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
         	for(var i = 0;i<5;i++){
        			 res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
       		}//or Event Mine?
-	        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
-	        let miners =await oracle.getMinersByRequestIdAndTimestamp(1,res[0]);
-	        await web3.eth.sendTransaction({to:oracle.address,from:accounts[0],gas:7000000,data:oracle2.methods.theLazyCoon(miners[j],web3.utils.toWei('5000', 'ether')).encodeABI()})
-	        await  web3.eth.sendTransaction({to: oracle.address,from:miners[j],gas:7000000,data:oracle2.methods.beginDispute(1,res[0],i).encodeABI()});
+	        let miners =await oracle.getMinersByRequestIdAndTimestamp(1,res.logs[1].args['_time']);
+          await tellorToken.mint(miners[j],web3.utils.toWei('5000', 'ether'));
+	        await  oracle.beginDispute(1,res.logs[1].args['_time'],i,{from:miners[j]});
 	        let disputeVars = await oracle.getAllDisputeVars(1);
-	        let vals = await oracle.getSubmissionsByTimestamp(1,res[0]);
-	        assert(disputeVars['0'] == web3.utils.soliditySha3({t:'address',v:miners[i]},{t:'uint256',v:1},{t:'uint256',v:res[0]}),"hash Should be correct");
+	        let vals = await oracle.getSubmissionsByTimestamp(1,res.logs[1].args['_time']);
+	        assert(disputeVars['0'] == web3.utils.soliditySha3({t:'address',v:miners[i]},{t:'uint256',v:1},{t:'uint256',v:res.logs[1].args['_time']}),"hash Should be correct");
 	        assert(disputeVars['1'] == false);
 	        assert(disputeVars['2'] == false);
 	        assert(disputeVars['5'] == miners[j], "reporter should be correct");
 	        assert(disputeVars['7'][0] == 1)
-	        assert(disputeVars['7'][1] == res[0], "timestamp should be correct")
+	        assert(disputeVars['7'][1] == res.logs[1].args['_time'], "timestamp should be correct")
 	        assert(disputeVars['7'][2] -  vals[i] == 0, "value should be correct")
 	        assert(disputeVars['7'][4] == 0)
 	        assert(disputeVars['7'][6] == i, "index should be correct")
 	        assert(disputeVars['7'][7] == 0)
 	        assert(disputeVars['8'] == 0, "Tally should be correct")
 	        balance1 = await oracle.balanceOf(miners[i]);
-
 	        assert(disputeVars['4'] == miners[i],"miner should be correct")
-	        await web3.eth.sendTransaction({to: oracle.address,from:miners[k],gas:7000000,data:oracle2.methods.vote(1,true).encodeABI()});
+	        await oracle.vote(1,true,{from:miners[k]});
 	        await helper.advanceTime(86400 * 22);
-	        await web3.eth.sendTransaction({to: oracle.address,from:accounts[0],gas:7000000,data:oracle2.methods.tallyVotes(1).encodeABI()});
+	        await oracle.tallyVotes(1)
 	        if(i==2){
-	        	assert(await oracle.isInDispute(1,res[0]) == true)
+	        	assert(await oracle.isInDispute(1,res.logs[1].args['_time']) == true)
 	        }
 	        else{
-	        	assert(await oracle.isInDispute(1,res[0]) == false,"isInDispute should be correct")
+	        	assert(await oracle.isInDispute(1,res.logs[1].args['_time']) == false,"isInDispute should be correct")
 	        }
-	         balance2 = await oracle.balanceOf(miners[i]);
+	        balance2 = await oracle.balanceOf(miners[i]);
 	        assert(balance1 - balance2 == await oracle.getUintVar(web3.utils.keccak256("stakeAmount")),"reported miner's balance should change correctly");
 	        s =  await oracle.getStakerInfo(miners[i])
         	assert(s[0] !=1, " Staked" );
@@ -411,17 +397,16 @@ contract('Oracle Tests', function(accounts) {
     it("Ensure Miner staked after failed dispute", async function () {
         for(var i = 0;i<5;i++){
         	res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-      	}//or Event Mine?
-        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)     
+      	}  
         balance1 = await oracle.balanceOf(accounts[2]);
-        blocknum = await oracle.getMinedBlockNum(0,res[0]);
-        await web3.eth.sendTransaction({to:oracle.address,from:accounts[0],gas:7000000,data:oracle2.methods.theLazyCoon(accounts[1],web3.utils.toWei('5000', 'ether')).encodeABI()})
+        blocknum = await oracle.getMinedBlockNum(0,res.logs[1].args['_time']);
+        await tellorToken.mint(accounts[1],web3.utils.toWei('5000', 'ether'));
         dispBal1 = await oracle.balanceOf(accounts[1])
-        await  web3.eth.sendTransaction({to: oracle.address,from:accounts[1],gas:7000000,data:oracle2.methods.beginDispute(1,res[0],2).encodeABI()});
+        await  oracle.beginDispute(1,res.logs[1].args['_time'],2,{from:accounts[1]});
         count = await await oracle.getUintVar(web3.utils.keccak256("disputeCount"));
-	    await web3.eth.sendTransaction({to: oracle.address,from:accounts[3],gas:7000000,data:oracle2.methods.vote(1,false).encodeABI()});
+	      await oracle.vote(1,false,{from:accounts[3]});
         await helper.advanceTime(86400 * 22);
-        await web3.eth.sendTransaction({to: oracle.address,from:accounts[0],gas:7000000,data:oracle2.methods.tallyVotes(1).encodeABI()});
+        await oracle.tallyVotes(1);
         balance2 = await oracle.balanceOf(accounts[2]);
         dispBal2 = await oracle.balanceOf(accounts[1])
         assert(balance2 - balance1 == await oracle.getUintVar(web3.utils.keccak256("disputeFee")),"balance1 should equal balance2")
@@ -452,17 +437,16 @@ contract('Oracle Tests', function(accounts) {
 	              for(var i = 0;i<5;i++){
         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
       }//or Event Mine?
-	        res = web3.eth.abi.decodeParameters(['uint256','uint256','uint256'],res.data)
-	        let miners =await oracle.getMinersByRequestIdAndTimestamp(1,res[0]);
+	        let miners =await oracle.getMinersByRequestIdAndTimestamp(1,res.logs[1].args['_time']);
 	        await tellorToken.mint(miners[j],web3.utils.toWei('5000', 'ether'))
-	        await  web3.eth.sendTransaction({to: oracle.address,from:miners[j],gas:7000000,data:oracle2.methods.beginDispute(1,res[0],i).encodeABI()});
+	        await  oracle.beginDispute(1,res.logs[1].args['_time'],i,{from:miners[j]});
 	        let disputeVars = await oracle.getAllDisputeVars(1);
 	        balance1 = await oracle.balanceOf(miners[i]);
 	        assert(disputeVars['4'] == miners[i],"miner should be correct")
 	        await oracle.vote(1,false,{from:miners[k]});
 	        await helper.advanceTime(86400 * 22);
 	        await oracle.tallyVotes(1);
-	        assert(await oracle.isInDispute(1,res[0]) == false)
+	        assert(await oracle.isInDispute(1,res.logs[1].args['_time']) == false)
 	     	balance2 = await oracle.balanceOf(miners[i]);
 	        assert(balance2-balance1 == await oracle.getUintVar(web3.utils.keccak256("disputeFee")),"reported miner's balance should change correctly");
 	        s =  await oracle.getStakerInfo(miners[i])
