@@ -43,7 +43,7 @@ library TellorLibrary {
         require(_requestId > 0, "RequestId is 0");
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
-        require(tellorToken.allowance(msg.sender,address(this)) >= _tip);
+        require(tellorToken.allowance(msg.sender,address(this)) >= _tip,"Allowance must be set");
         //If the tip > 0 transfer the tip to this contract
         require (_tip >= 5, "Tip must be greater than 5");//must be greater than 5 loyas so each miner gets at least 1 loya
         tellorToken.transferFrom(msg.sender, address(this), _tip);
@@ -173,7 +173,7 @@ event print(uint test);
             newBlock(self, _requestId);
         }
         //Once a validator submits data set their status back to false
-        self.validValidator[msg.sender] == false;
+        self.validValidator[msg.sender] = false;
     }
 
 
