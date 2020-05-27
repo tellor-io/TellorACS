@@ -24,7 +24,7 @@ contract('Oracle Tests', function(accounts) {
           await oracle.depositStake(web3.utils.toWei('100'),{from:accounts[i],gas:2000000,})
         }
         await tellorToken.mint(accounts[0],web3.utils.toWei("500"));
-        await tellorToken.approve(oracle.address,10,{from:accounts[0]});
+        await tellorToken.approve(oracle.address,5,{from:accounts[0]});
         await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
     });  
   //   it("Get Symbol,Name, Decimals", async function(){
@@ -45,7 +45,6 @@ contract('Oracle Tests', function(accounts) {
   //       assert(stake*1 == 1, "Should be 1 for staked address");
   //    });
      it("Test 5 Mines", async function () {
-      await oracle.addTip(1,5,{from:accounts[0],gas:2000000})
       for(var i = 0;i<5;i++){
         let miners = await oracle.getCurrentMiners();
         for(var j = 0;j<5;j++){
@@ -73,21 +72,17 @@ contract('Oracle Tests', function(accounts) {
           await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
         }   
 		    res2 = await oracle.getLastNewValue();
-        //console.log(web3.utils.hexToNumberString(res2[0]))
-
         assert(res2[0] == 102, "Ensure data exist for the last mine value");
     });
     it("Test Data Read", async function () {
-      for(var i = 0;i<5;i++){
+        for(var i = 0;i<5;i++){
           res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
         } 
         var time0 =  res.logs['1'].args['_time']
         var res2 = await oracle.retrieveData(1,time0);
  		    assert(res2 == 102, "Ensure data exist for the last mine value");
-
         res1 = await oracle.getLastNewValue();
         assert(res1[0]*1 == res2*1, "getLastNewValue is not getting the last value")
-
         var res3 = await oracle.getTimestampbyRequestIDandIndex(1,0);
         assert(time0*1 == res3*1, "Getting the timestamp should be correct");
     });
@@ -98,36 +93,30 @@ contract('Oracle Tests', function(accounts) {
         balances = []
         for(var j = 0;j<5;j++){
             balances[j] = await tellorToken.balanceOf(accounts[j]);
-            //console.log('beg balance', j, web3.utils.fromWei(balances[j]))
         }
         for(var k = 0;k<5;k++){
           res = await oracle.submitMiningSolution(1,100 + k,{from:accounts[k]});
-          //console.log(k)
         }
         new_balances = []
 		    for(var l = 0;l<5;l++){
             new_balances[l] = await tellorToken.balanceOf(accounts[l]);
-            //console.log('new balance',l, web3.utils.fromWei(new_balances[l]))
             assert(web3.utils.fromWei(new_balances[l]) - web3.utils.fromWei(balances[l]) == 1, "difference is different than 1");
         }
-        //"TypeError: msg.replace is not a function"
     });
     it("Test didMine ", async function () {
-	  vars = await oracle.getCurrentVariables();
+	   vars = await oracle.getCurrentVariables();
       for(var i = 0;i<5;i++){
          res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-      }//or Event Mine?
+      }
       didMine = oracle.didMine(vars[0],accounts[1]);
       assert(didMine);
     });
     it("Test Get MinersbyValue ", async function () {
       for(var i = 0;i<5;i++){
         res = await oracle.submitMiningSolution(1,100 + i,{from:accounts[i]});
-      }//or Event Mine?
-      console.log(1)
+      }
       var time0 =  res.logs['1'].args['_time']     
 		  miners = await oracle.getMinersByRequestIdAndTimestamp(1, time0);
-      console.log('miners', miners)
       assert(miners ==[accounts[0],accounts[1],accounts[2],accounts[3],accounts[4]])
     });
     it("Test miner, alternating api request on Q and auto select", async function () {
