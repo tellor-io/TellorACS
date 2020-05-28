@@ -164,7 +164,7 @@ event Print(string _a, uint _b);
                     TellorStake.removeFromStakerArray(self, stakes.stakePosition[0],disp.reportedMiner);
                     //Decreases the stakerCount since the miner's stake is being slashed
                     TellorTransfer.doTransfer(self,disp.reportedMiner,address(0),self.uintVars[keccak256("minimumStake")]);
-                    if (TellorTransfer.balanceOf(self,msg.sender) == 0){
+                    if (TellorTransfer.balanceOf(self,disp.reportedMiner) == 0){
                         stakes.currentStatus =0 ;
                         self.uintVars[keccak256("uniqueStakers")] -= 1;
                     }else{
@@ -198,10 +198,11 @@ event Print(string _a, uint _b);
                 if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
                     _request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] = false;
                 }
-                for(uint i = self.disputeIdsByDisputeHash[disp.hash].length -1; i>=0 ; i++){
-                        uint256 _id = self.disputeIdsByDisputeHash[self.disputesById[_disputeId].hash][i];
+
+                for(uint i = 1; i <= self.disputeIdsByDisputeHash[disp.hash].length;i++){
+                        uint256 _id = self.disputeIdsByDisputeHash[_hash][i-1];
                         disp = self.disputesById[_id];
-                        tellorToken.transfer(disp.reportedMiner,disp.disputeUintVars[keccak256("fee")]);                        
+                        tellorToken.transfer(disp.reportedMiner,disp.disputeUintVars[keccak256("fee")]);
                     }
             }
     }
