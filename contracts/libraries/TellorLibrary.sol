@@ -20,6 +20,7 @@ library TellorLibrary {
     event TipAdded(address indexed _sender, uint256 indexed _requestId, uint256 _tip, uint256 _totalTips);
     //emits when a new challenge is created (either on mined block or when a new request is pushed forward on waiting system)
     event NewChallenge(
+        bytes32 indexed _currentChallenge,
         uint256 indexed _currentRequestId,
         uint256 _totalTips
     );
@@ -111,6 +112,7 @@ event print(uint test);
         //else wait for a new tip to mine
         if (_topId > 0) {
             selectNewValidators(self,true);
+            self.currentChallenge = keccak256(abi.encodePacked(randomnumber(self,_timeOfLastNewValue,a[2].value), self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
             //Update the current request to be mined to the requestID with the highest payout
             self.uintVars[keccak256("currentTotalTips")] = self.requestDetails[_topId].apiUintVars[keccak256("totalTip")];
             //Remove the currentRequestId/onDeckRequestId from the requestQ array containing the rest of the 50 requests
@@ -129,6 +131,7 @@ event print(uint test);
             uint256 newRequestId = TellorGettersLibrary.getTopRequestID(self);
             //Issue the the next requestID 
            emit NewChallenge(
+                self.currentChallenge,
                 _topId,
                 self.uintVars[keccak256("currentTotalTips")]
             );
@@ -169,11 +172,12 @@ event print(uint test);
         self.minersByChallenge[self.currentChallenge][msg.sender] = true;
         emit SolutionSubmitted(msg.sender, _requestId, _value, self.currentChallenge);
         //If 5 values have been received, adjust the difficulty otherwise sort the values until 5 are received
+        self.validValidator[msg.sender] = false;
         if (self.uintVars[keccak256("slotProgress")] == 5) {
             newBlock(self, _requestId);
         }
         //Once a validator submits data set their status back to false
-        self.validValidator[msg.sender] = false;
+
     }
 
 
@@ -197,6 +201,7 @@ event print(uint test);
             self.currentChallenge = keccak256(abi.encodePacked(_payout, self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
             selectNewValidators(self,true);
             emit NewChallenge(
+                self.currentChallenge,
                 self.uintVars[keccak256("currentRequestId")],
                 self.uintVars[keccak256("currentTotalTips")]
             );

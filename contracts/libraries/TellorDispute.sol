@@ -42,6 +42,11 @@ library TellorDispute {
         //provided by the party initiating the dispute
         address _miner = _request.minersByValue[_timestamp][_minerIndex];
         bytes32 _hash = keccak256(abi.encodePacked(_miner, _requestId, _timestamp));
+        if (self.disputeIdsByDisputeHash[_hash].length > 0){
+                uint256 _finalId = self.disputeIdsByDisputeHash[_hash][self.disputeIdsByDisputeHash[_hash].length - 1];
+                require(self.disputesById[_finalId].executed, "previous vote must be over with");
+        } 
+
         //Increase the dispute count by 1
         self.uintVars[keccak256("disputeCount")] = self.uintVars[keccak256("disputeCount")] + 1;
         //Sets the new disputeCount as the disputeId
@@ -77,7 +82,7 @@ library TellorDispute {
         //So the "official value" miner is always minerIndex==2. If the official value is being
         //disputed, it sets its status to inDispute(currentStatus = 3) so that users are made aware it is under dispute
         if (_minerIndex == 2) {
-            self.requestDetails[_requestId].inDispute[_timestamp] = true;
+            _request.inDispute[_timestamp] = true;
             _request.finalValues[_timestamp] = 0;
         }
         self.stakerDetails[_miner].currentStatus = 3;
@@ -151,9 +156,11 @@ event Print(string _a, uint _b);
         uint256 _finalId = self.disputeIdsByDisputeHash[_hash][self.disputeIdsByDisputeHash[_hash].length - 1];
         emit Print("final ID", _finalId);
         TellorStorage.Dispute storage disp = self.disputesById[_finalId];
+        require(disp.disputeUintVars[keccak256("paid")] == 0,"already paid out");
         require(now - disp.disputeUintVars[keccak256("tallyDate")] > 1 days, "Time for voting haven't elapsed");
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
         TellorStorage.StakeInfo storage stakes = self.stakerDetails[disp.reportedMiner];
+        disp.disputeUintVars[keccak256("paid")] = 1;
         if (disp.disputeVotePassed == true){
                 //if reported miner stake has not been slashed yet, slash them and return the fee to reporting party
                 emit Print('status',stakes.currentStatus);
@@ -182,14 +189,19 @@ event Print(string _a, uint _b);
                         }
                     }
                 //if reported miner stake was already slashed, return the fee to other reporting paties
-                } else if (stakes.currentStatus == 0){
-                    TellorTransfer.doTransfer(self, address(this), disp.reportingParty, disp.disputeUintVars[keccak256("fee")]);
-                    tellorToken.transfer(disp.reportingParty,disp.disputeUintVars[keccak256("fee")]);
+                } else {
+                    for(uint i = 1; i <= self.disputeIdsByDisputeHash[disp.hash].length;i++){
+                        uint256 _id = self.disputeIdsByDisputeHash[_hash][i-1];
+                        disp = self.disputesById[_id];
+                        tellorToken.transfer(disp.reportingParty,disp.disputeUintVars[keccak256("fee")]);
+                    }
                 }
             }
-            else if (stakes.currentStatus == 4){
-                stakes.currentStatus = 1;
-                   TellorStorage.Request storage _request = self.requestDetails[_finalId];
+            else {
+                if (stakes.currentStatus == 4){
+                    stakes.currentStatus = 1;
+                }
+                TellorStorage.Request storage _request = self.requestDetails[disp.disputeUintVars[keccak256("requestId")]];
                 if(disp.disputeUintVars[keccak256("minerSlot")] == 2) {
                     //note we still don't put timestamp back into array (is this an issue? (shouldn't be))
                   _request.finalValues[disp.disputeUintVars[keccak256("timestamp")]] = disp.disputeUintVars[keccak256("value")];
@@ -198,7 +210,6 @@ event Print(string _a, uint _b);
                 if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
                     _request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] = false;
                 }
-
                 for(uint i = 1; i <= self.disputeIdsByDisputeHash[disp.hash].length;i++){
                         uint256 _id = self.disputeIdsByDisputeHash[_hash][i-1];
                         disp = self.disputesById[_id];
