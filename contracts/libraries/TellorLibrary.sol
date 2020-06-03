@@ -10,13 +10,14 @@ import "./TellorGettersLibrary.sol";
 import "../interfaces/TokenInterface.sol";
 
 /**
- * @title Tellor Oracle System Library
- * @dev Contains the functions' logic for the Tellor contract where miners can submit the proof of work
- * along with the value and smart contracts can requestData and tip miners.
- */
+* @title Tellor Oracle System Library
+* @dev Contains the functions' logic for the Tellor contract where miners can submit the proof of work
+* along with the value and smart contracts can requestData and tip miners.
+*/
+
 library TellorLibrary {
     using SafeMath for uint256;
-
+    //emits when a tip is added to a requestId
     event TipAdded(address indexed _sender, uint256 indexed _requestId, uint256 _tip, uint256 _totalTips);
     //emits when a new challenge is created (either on mined block or when a new request is pushed forward on waiting system)
     event NewChallenge(
@@ -30,6 +31,7 @@ library TellorLibrary {
     event NewValue(uint256 indexed _requestId, uint256 _time, uint256 _value, uint256 _totalTips, bytes32 _currentChallenge);
     //Emits upon each mine (5 total) and shows the miner, and value submitted
     event SolutionSubmitted(address indexed _miner,  uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
+    //emits when a new validator is selected
     event NewValidatorsSelected(address _validator);
 
     
@@ -53,9 +55,8 @@ library TellorLibrary {
         emit TipAdded(msg.sender, _requestId, _tip, self.requestDetails[_requestId].apiUintVars[keccak256("totalTip")]);
     }
 
-event print(uint test);
-     /**
-    * @dev This fucntion is called by submitMiningSolution and adjusts the difficulty, sorts and stores the first
+    /**
+    * @dev This function is called by submitMiningSolution and adjusts the difficulty, sorts and stores the first
     * 5 values received, pays the miners, the dev share and assigns a new challenge
     * @param _requestId for the current request being mined
     */
@@ -146,7 +147,6 @@ event print(uint test);
         }
     }
 
-
     /**
     * @dev Proof of work is called by the miner when they submit the solution (proof of work and value)
     * @param _requestId the apiId being mined
@@ -172,14 +172,12 @@ event print(uint test);
         self.minersByChallenge[self.currentChallenge][msg.sender] = true;
         emit SolutionSubmitted(msg.sender, _requestId, _value, self.currentChallenge);
         //If 5 values have been received, adjust the difficulty otherwise sort the values until 5 are received
+        //Once a validator submits data set their status back to false
         self.validValidator[msg.sender] = false;
         if (self.uintVars[keccak256("slotProgress")] == 5) {
             newBlock(self, _requestId);
         }
-        //Once a validator submits data set their status back to false
-
     }
-
 
    /**
     * @dev This function updates APIonQ and the requestQ when requestData or addTip are ran
@@ -238,9 +236,6 @@ event print(uint test);
         }
     }
     
-
-
-
     /**
     * @dev Reselects validators if any of the first five fail to submit data
     */

@@ -13,13 +13,13 @@ import "./libraries/TellorDispute.sol";
 * @dev Oracle contract with all tellor getter functions. The logic for the functions on this contract
 * is saved on the TellorGettersLibrary, TellorTransfer, TellorGettersLibrary, and TellorStake
 */
+
 contract TellorGetters {
     using SafeMath for uint256;
 
     using TellorTransfer for TellorStorage.TellorStorageStruct;
     using TellorGettersLibrary for TellorStorage.TellorStorageStruct;
     using TellorStake for TellorStorage.TellorStorageStruct;
-
     using TellorDispute for TellorStorage.TellorStorageStruct;
     using TellorLibrary for TellorStorage.TellorStorageStruct;
 
@@ -35,13 +35,22 @@ contract TellorGetters {
         return tellor.didMine(_challenge, _miner);
     }
 
-
+    /**
+    * @dev This function gets the balance of the specified user address
+    * @param _user is the address to check the balance for
+    */
     function balanceOf(address _user) external view returns(uint256){
         return tellor.balanceOf(_user);
     }
+
+    /**
+    * @dev This function gets the currently selected validators
+    * @returns an array of the currently selected validators
+    */
     function getCurrentMiners() external view returns(address[] memory miners){
         return tellor.getCurrentMiners();
     }
+
     /**
     * @dev Checks if an address voted in a given dispute
     * @param _disputeId to look up
@@ -91,17 +100,17 @@ contract TellorGetters {
     }
 
     /**
-    * @dev Getter function for variables for the requestId being currently mined(currentRequestId)
-    * @return current challenge, curretnRequestId, level of difficulty, total tip for the request
+    * @dev Getter function for variables for the requestId validators are currently providing data for
+    * @return current challenge, curretnRequestId, total tip for the request
     */
     function getCurrentVariables() external view returns (bytes32, uint256, uint256) {
         return tellor.getCurrentVariables();
     }
 
     /**
-    * @dev Checks if a given hash of miner,requestId has been disputed
+    * @dev Checks if a given hash of validator,requestId has been disputed
     * @param _hash is the sha256(abi.encodePacked(_miners[2],_requestId));
-    * @return uint disputeId
+    * @return uint array of disputeIds
     */
     function getDisputeIdsByDisputeHash(bytes32 _hash) external view returns (uint256[] memory) {
         return tellor.getDisputeIdsByDisputeHash(_hash);
@@ -157,7 +166,6 @@ contract TellorGetters {
         return tellor.getMinersByRequestIdAndTimestamp(_requestId, _timestamp);
     }
 
-
    /**
     * @dev Counts the number of values that have been submited for the request
     * if called for the currentRequest being mined it can tell you how many miners have submitted a value for that
@@ -196,7 +204,7 @@ contract TellorGetters {
     }
 
     /**
-    * @dev Allowes access to the uint variables saved in the apiUintVars under the requestDetails struct
+    * @dev Allows access to the uint variables saved in the apiUintVars under the requestDetails struct
     * for the requestId specified
     * @param _requestId to look up
     * @param _data the variable to pull from the mapping. _data = keccak256("variable_name") where variable_name is
@@ -223,6 +231,7 @@ contract TellorGetters {
     * @param _staker address of staker inquiring about
     * @return uint current state of staker
     * @return uint startDate of staking
+    * @return uint stakePosition for the staker
     */
     function getStakerInfo(address _staker) external view returns (uint256, uint256,uint256) {
         return tellor.getStakerInfo(_staker);
@@ -263,7 +272,7 @@ contract TellorGetters {
 
     /**
     * @dev Getter function for next requestId on queue/request with highest payout at time the function is called
-    * @return onDeck/info on request with highest payout-- RequestId, Totaltips, and API query string
+    * @return onDeck/info on request with highest payout-- RequestId, Totaltips
     */
     function getVariablesOnDeck() external view returns (uint256, uint256) {
         return tellor.getVariablesOnDeck();

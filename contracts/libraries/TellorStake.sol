@@ -4,9 +4,10 @@ import "./TellorStorage.sol";
 import "./TellorTransfer.sol";
 import "./TellorDispute.sol";
 import "../interfaces/TokenInterface.sol";
+
 /**
 * itle Tellor Dispute
-* @dev Contais the methods related to miners staking and unstaking. Tellor.sol
+* @dev Contains the methods related to miners staking and unstaking. Tellor.sol
 * references this library for function's logic.
 */
 
@@ -16,7 +17,7 @@ library TellorStake {
     event StakeWithdrawRequested(address indexed _sender); //Emits when a staker begins the 7 day withdraw period
 
     /*Functions*/
-    event print(uint number);
+
     /**
     * @dev This function allows stakers to request to withdraw their stake (no longer stake)
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
@@ -58,11 +59,10 @@ library TellorStake {
             TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             tellorToken.transfer(msg.sender,stakes.withdrawAmount);
             emit StakeWithdrawn(msg.sender);
-        
     }
 
     /**
-    * @dev This function allows miners to deposit their stake.
+    * @dev This function allows miners to deposit their stake
     * @param _amount is the amount to be staked
     */
     function depositStake(TellorStorage.TellorStorageStruct storage self, uint _amount) public {
@@ -91,10 +91,13 @@ library TellorStake {
         emit NewStake(msg.sender);       
     }
 
-
+    /**
+    * @dev This function is used by requestStakingWithdraw to remove the staker from the stakers array
+    * @param _pos is the staker's position in the array 
+    * @param _staker is the staker's address
+    */
     function removeFromStakerArray(TellorStorage.TellorStorageStruct storage self, uint _pos, address _staker) internal{
         address lastAdd;
-        //uint lastIndex;
         if(_pos == self.stakers.length-1){
             self.stakers.length--;
             self.stakerDetails[_staker].stakePosition.length--;

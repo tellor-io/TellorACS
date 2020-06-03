@@ -20,59 +20,60 @@ contract ERC20 {
 
     event Approval(address indexed _owner, address indexed _spender, uint256 _value); //ERC20 Approval event
     event Transfer(address indexed _from, address indexed _to, uint256 _value); //ERC20 Transfer Event
+    
     /**
-     * returns total supply.
-     */
+    * returns total supply.
+    */
     function totalSupply() public view returns (uint256) {
         return _totalSupply;
     }
 
     /**
-     * Gets a users balance
-     */
+    * Gets a users balance
+    */
     function balanceOf(address account) public view returns (uint256) {
         return balanceOfAt(account, block.number);
     }
 
     /**
-     * transfers an amount.
-     * Requirements:
-     * - `recipient` cannot be the zero address.
-     * - the caller must have a balance of at least `amount`.
-     */
+    * transfers an amount.
+    * Requirements:
+    * - `recipient` cannot be the zero address.
+    * - the caller must have a balance of at least `amount`.
+    */
     function transfer(address recipient, uint256 amount) public returns (bool) {
         doTransfer(msg.sender, recipient, amount);
         return true;
     }
 
     /**
-     * @dev See `IERC20.allowance`.
-     */
+    * @dev See `IERC20.allowance`.
+    */
     function allowance(address owner, address spender) public view returns (uint256) {
         return _allowances[owner][spender];
     }
 
     /**
-     * @dev See `IERC20.approve`.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     */
+    * @dev See `IERC20.approve`.
+    *
+    * Requirements:
+    *
+    * - `spender` cannot be the zero address.
+    */
     function approve(address spender, uint256 value) public returns (bool) {
         _approve(msg.sender, spender, value);
         return true;
     }
 
     /**
-     * Emits an `Approval` event indicating the updated allowance. This is not
-     * required by the EIP. See the note at the beginning of `ERC20`;
-     * Requirements:
-     * - `sender` and `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `value`.
-     * - the caller must have allowance for `sender`'s tokens of at least
-     * `amount`.
-     */
+    * Emits an `Approval` event indicating the updated allowance. This is not
+    * required by the EIP. See the note at the beginning of `ERC20`;
+    * Requirements:
+    * - `sender` and `recipient` cannot be the zero address.
+    * - `sender` must have a balance of at least `value`.
+    * - the caller must have allowance for `sender`'s tokens of at least
+    * `amount`.
+    */
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
         require(_allowances[sender][msg.sender] >= amount, "Allowance is wrong");
         _allowances[sender][msg.sender] -= amount;
@@ -101,11 +102,11 @@ contract ERC20 {
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-     * the total supply.
-     * Emits a `Transfer` event with `from` set to the zero address.
-     * Requirements
-     * - `to` cannot be the zero address.
-     */
+    * the total supply.
+    * Emits a `Transfer` event with `from` set to the zero address.
+    * Requirements
+    * - `to` cannot be the zero address.
+    */
     function mint(address account, uint256 amount) public {
         require(account != address(0), "ERC20: mint to the zero address");     
 
@@ -116,14 +117,14 @@ contract ERC20 {
         emit Transfer(address(0), account, amount);
     }
 
-     /**
-     * @dev Destoys `amount` tokens from `account`, reducing the
-     * total supply.
-     * Emits a `Transfer` event with `to` set to the zero address.
-     * Requirements
-     * - `account` cannot be the zero address.
-     * - `account` must have at least `amount` tokens.
-     */
+    /**
+    * @dev Destoys `amount` tokens from `account`, reducing the
+    * total supply.
+    * Emits a `Transfer` event with `to` set to the zero address.
+    * Requirements
+    * - `account` cannot be the zero address.
+    * - `account` must have at least `amount` tokens.
+    */
     function burn(address account, uint256 amount) public {
         require(account != address(0), "ERC20: burn from the zero address");
 
@@ -136,14 +137,14 @@ contract ERC20 {
     }
 
     /**
-     * @dev Sets `amount` as the allowance of `spender` over the `owner`s tokens.
-     * This is internal function is equivalent to `approve`, and can be used to
-     * e.g. set automatic allowances for certain subsystems, etc.
-     * Emits an `Approval` event.
-     * Requirements:
-     * - `owner` cannot be the zero address.
-     * - `spender` cannot be the zero address.
-     */
+    * @dev Sets `amount` as the allowance of `spender` over the `owner`s tokens.
+    * This is internal function is equivalent to `approve`, and can be used to
+    * e.g. set automatic allowances for certain subsystems, etc.
+    * Emits an `Approval` event.
+    * Requirements:
+    * - `owner` cannot be the zero address.
+    * - `spender` cannot be the zero address.
+    */
     function _approve(address owner, address spender, uint256 value) internal {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");

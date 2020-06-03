@@ -72,24 +72,33 @@ contract Tellor is TellorGetters{
 
     /**
     * @dev This function allows miners to deposit their stake.
+    * @param _amount is the amount the sender wants to stake
     */
     function depositStake(uint _amount) external {
         tellor.depositStake(_amount);
     }
 
-
+    /**
+    * @dev This function reselects validators if the originals did not complete the block
+    */
     function reselectNewValidators() external{
         tellor.reselectNewValidators();
     }
+
     /**
     * @dev This function allows stakers to request to withdraw their stake (no longer stake)
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
     * can withdraw the stake
+    * @param _amount to unstake
     */
     function requestStakingWithdraw(uint _amount) external {
         tellor.requestStakingWithdraw(_amount);
     }
 
+    /**
+    * @dev This function allows for the dispute fee to be unlocked after the dispute vote has elapsed
+    * @param _disputeId is the disputeId to unlock the fee from
+    */
     function  unlockDisputeFee (uint _disputeId) external{
         tellor.unlockDisputeFee(_disputeId);
     }

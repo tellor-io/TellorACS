@@ -148,13 +148,13 @@ library TellorDispute {
         emit DisputeVoteTallied(_disputeId, disp.tally, disp.reportedMiner, disp.reportingParty, disp.disputeVotePassed);
     }
 
-
-event Print(string _a, uint _b);
-
+    /**
+    * @dev Unlocks the dispute fee
+    * @param _disputeId is the dispute id
+    */
     function unlockDisputeFee (TellorStorage.TellorStorageStruct storage self, uint _disputeId) public {
         bytes32 _hash = self.disputesById[_disputeId].hash;
         uint256 _finalId = self.disputeIdsByDisputeHash[_hash][self.disputeIdsByDisputeHash[_hash].length - 1];
-        emit Print("final ID", _finalId);
         TellorStorage.Dispute storage disp = self.disputesById[_finalId];
         require(disp.disputeUintVars[keccak256("paid")] == 0,"already paid out");
         require(now - disp.disputeUintVars[keccak256("tallyDate")] > 1 days, "Time for voting haven't elapsed");
@@ -163,7 +163,6 @@ event Print(string _a, uint _b);
         disp.disputeUintVars[keccak256("paid")] = 1;
         if (disp.disputeVotePassed == true){
                 //if reported miner stake has not been slashed yet, slash them and return the fee to reporting party
-                emit Print('status',stakes.currentStatus);
                 if (stakes.currentStatus == 4) {
                     //Changing the currentStatus and startDate unstakes the reported miner and transfers the stakeAmount
                     self.uintVars[keccak256("stakerCount")] -= 1;
