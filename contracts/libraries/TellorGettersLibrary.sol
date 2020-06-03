@@ -17,7 +17,7 @@ library TellorGettersLibrary {
     /*Tellor Getters*/
     /**
     * @dev This function gets the 5 miners currently selected for providing data
-    * @returns miners an array of the miner addresses
+    * @return miners an array of the miner addresses
     */
     function getCurrentMiners(TellorStorage.TellorStorageStruct storage self) 
         internal 

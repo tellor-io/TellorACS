@@ -45,7 +45,7 @@ contract TellorGetters {
 
     /**
     * @dev This function gets the currently selected validators
-    * @returns an array of the currently selected validators
+    * @return an array of the currently selected validators
     */
     function getCurrentMiners() external view returns(address[] memory miners){
         return tellor.getCurrentMiners();

@@ -60,16 +60,16 @@ The plan for alterate chains is to build a PoS Tellor system utilizing the Tello
 </p>
 
 The following workflow describes the steps for the ACS:
-* Tellor Token holders wishing to validate or request data on the alternate chain transfer tokens from Ethereum to the alternate chain.
+* Tellor Token holders wishing to validate or request data on the alternate chain need to transfer TRB tokens from Ethereum to the alternate chain.The TRB token is an ERC20 token.
 * Validators stake Tellor Tokens in increments of 10 tokens
-These ACS stakers are now randomly selected to provide data for given requests.
+These ACS stakers are randomly selected to provide data for the given requests.
 * There are 5 validators per data point. 
-Parties pay for requests with TRB or native token to be split among validating stakers
-* Minimum amount of TRB for each data point to be determined by cost on the network (cost for txn)
+Parties pay for requests with TRB or native token and the payment is split among validating stakers
+* The minimum amount of TRB for each data point is determined by the cost network cost for txn
 * Stakers are only rewarded if they fulfill the task, but if they miss their turn 5 times, they will lose a small amount of stake (e.g. 1 TRB per day) and are unstaked automatically after that.
 * Values can be disputed
-* Day long voting round initially, with additional dispute rounds (double the dispute fee and voting period each time)--Rounds are necessary to mitigate risk of flash voting. 
-* Voting based upon balance on sidechain  at beginning of dispute (so you can bring over more Tellor for each subsequent dispute)
+* There is a day long voting round initially, with additional dispute rounds where the dispute fee and voting period is doubled each time. Rounds are necessary to mitigate risk of flash voting. 
+* Voting is based upon the balance on the sidechain at beginning of the dispute (so you can bring over more Tellor for each subsequent dispute)
 
 
 #### Maintainers <a name="maintainers"> </a> 
