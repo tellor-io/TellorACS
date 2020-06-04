@@ -138,7 +138,11 @@ library TellorGettersLibrary {
     * @param _hash is the sha256(abi.encodePacked(_miners[2],_requestId));
     * @return uint disputeId
     */
-    function getDisputeIdsByDisputeHash(TellorStorage.TellorStorageStruct storage self, bytes32 _hash) internal view returns (uint256[] memory) {
+    function getDisputeIdsByDisputeHash(TellorStorage.TellorStorageStruct storage self, bytes32 _hash) 
+        internal 
+        view 
+        returns (uint256[] memory) 
+    {
         return self.disputeIdsByDisputeHash[_hash];
     }
 

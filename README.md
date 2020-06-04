@@ -13,8 +13,8 @@
 
 # Tellor Oracle Alternate Chain Structure (ACS)
 
-### ACS implementation on Alternate Chains
-implementation of the ACS will vary by specific blockchain. This iteration can be implemented on chains that are Ethereum EVM compatible.
+### Preface
+Implementation of the ACS will vary by specific blockchain. This iteration can be implemented on chains that are Ethereum EVM compatible.
 
 ### Deployment steps
 Deployment steps are dependent on each specific chain. However, you can test this repository using Truffle:
@@ -52,7 +52,7 @@ Why not just deploy the current Tellor implementation in another chain?
 3. Tellor's current structure was specifically designed with Ethereum's limitations and DeFi in mind. Alternate chains have different data demands and even different features (e.g. speed) that we can and should incorporate into the design.
 
 
-### Alternate Chain structure
+### Technical Design
 The plan for alternate chains is to build a PoS Tellor system utilizing the Tellor Token and the current network of the Tellor community to validate and provide data on the alternate chain. The design assumes the alternate chain has:
 
 * Functioning, Decentralized Token Bridge 
