@@ -15,29 +15,13 @@ contract Tellor is TellorGetters{
     event NewTellorToken(address _token);
 
     /*Functions*/
-
-    /*This is a cheat for demo purposes, will delete upon actual launch*/
-   function theLazyCoon(address _address, uint _amount) public {
-        tellor.theLazyCoon(_address,_amount);
-    }
-
-
     constructor (address _tellorToken) public {
         tellor.uintVars[keccak256("decimals")] = 18;
-        tellor.uintVars[keccak256("targetMiners")] = 200;
         tellor.uintVars[keccak256("disputeFee")] = 10e18;
         tellor.uintVars[keccak256("minimumStake")] = 100e18;
-        tellor.addressVars[keccak256("_deity")] = msg.sender;
         tellor.addressVars[keccak256("tellorToken")] = _tellorToken;
-        //tellor.stakers.push(address(0));
-        emit NewTellorToken(tellor.addressVars[keccak256("tellorToken")]);
         emit NewTellorToken(_tellorToken);
     }
-
-    function changeTellorToken(address _newToken) external{
-        tellor.changeTellorToken(_newToken);
-    }
-
     /**
     * @dev Helps initialize a dispute by assigning it a disputeId
     * when a miner returns a false on the validate array(in Tellor.ProofOfWork) it sends the
@@ -88,22 +72,35 @@ contract Tellor is TellorGetters{
 
     /**
     * @dev This function allows miners to deposit their stake.
+    * @param _amount is the amount the sender wants to stake
     */
     function depositStake(uint _amount) external {
         tellor.depositStake(_amount);
     }
 
-
+    /**
+    * @dev This function reselects validators if the originals did not complete the block
+    */
     function reselectNewValidators() external{
         tellor.reselectNewValidators();
     }
+
     /**
     * @dev This function allows stakers to request to withdraw their stake (no longer stake)
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
     * can withdraw the stake
+    * @param _amount to unstake
     */
     function requestStakingWithdraw(uint _amount) external {
         tellor.requestStakingWithdraw(_amount);
+    }
+
+    /**
+    * @dev This function allows for the dispute fee to be unlocked after the dispute vote has elapsed
+    * @param _disputeId is the disputeId to unlock the fee from
+    */
+    function  unlockDisputeFee (uint _disputeId) external{
+        tellor.unlockDisputeFee(_disputeId);
     }
 
     /**

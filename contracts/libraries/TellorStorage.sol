@@ -69,7 +69,7 @@ library TellorStorage {
 
     struct TellorStorageStruct {
         address[] selectedValidators;
-        address[]  stakers; //internal--not working
+        address[]  stakers; 
         mapping(address => uint) missedCalls;//if your missed calls gets up to 3, you lose a TRB.  A successful retrieval resets its
         mapping(address => bool) validValidator; //ensures only selected validators can sumbmit data
         bytes32 currentChallenge; //current challenge to be solved
@@ -112,6 +112,6 @@ library TellorStorage {
         mapping(address => mapping(address => uint256)) allowed; //allowance for a given party and approver
         mapping(address => StakeInfo) stakerDetails; //mapping from a persons address to their staking info
         mapping(uint256 => Request) requestDetails; //mapping of apiID to details
-        mapping(bytes32 => uint256) disputeIdByDisputeHash; //maps a hash to an ID for each dispute
+        mapping(bytes32 => uint256[]) disputeIdsByDisputeHash; //maps a hash to an ID for each dispute
     }
 }

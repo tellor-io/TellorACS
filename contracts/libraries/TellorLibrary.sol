@@ -10,19 +10,19 @@ import "./TellorGettersLibrary.sol";
 import "../interfaces/TokenInterface.sol";
 
 /**
- * @title Tellor Oracle System Library
- * @dev Contains the functions' logic for the Tellor contract where miners can submit the proof of work
- * along with the value and smart contracts can requestData and tip miners.
- */
+* @title Tellor Oracle System Library
+* @dev Contains the functions' logic for the Tellor contract where miners can submit the proof of work
+* along with the value and smart contracts can requestData and tip miners.
+*/
+
 library TellorLibrary {
     using SafeMath for uint256;
-
+    //emits when a tip is added to a requestId
     event TipAdded(address indexed _sender, uint256 indexed _requestId, uint256 _tip, uint256 _totalTips);
     //emits when a new challenge is created (either on mined block or when a new request is pushed forward on waiting system)
     event NewChallenge(
-        bytes32 _currentChallenge,
+        bytes32 indexed _currentChallenge,
         uint256 indexed _currentRequestId,
-        uint256 _difficulty,
         uint256 _totalTips
     );
     //emits when a the payout of another request is higher after adding to the payoutPool or submitting a request
@@ -31,18 +31,11 @@ library TellorLibrary {
     event NewValue(uint256 indexed _requestId, uint256 _time, uint256 _value, uint256 _totalTips, bytes32 _currentChallenge);
     //Emits upon each mine (5 total) and shows the miner, and value submitted
     event SolutionSubmitted(address indexed _miner,  uint256 indexed _requestId, uint256 _value, bytes32 _currentChallenge);
+    //emits when a new validator is selected
     event NewValidatorsSelected(address _validator);
 
     
-    /*Functions*/
-
-    /*This is a cheat for demo purposes, will delete upon actual launch*/
-    function theLazyCoon(TellorStorage.TellorStorageStruct storage self,address _address, uint _amount) public {
-        self.uintVars[keccak256("total_supply")] += _amount;
-        TellorTransfer.updateBalanceAtNow(self.balances[_address],_amount);
-    } 
-
-    
+    /*Functions*/    
     /**
     * @dev Add tip to Request value from oracle
     * @param _requestId being requested to be mined
@@ -53,32 +46,27 @@ library TellorLibrary {
         require(_requestId > 0, "RequestId is 0");
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
             
-        require(tellorToken.allowance(msg.sender,address(this)) >= _tip);
-
+        require(tellorToken.allowance(msg.sender,address(this)) >= _tip,"Allowance must be set");
         //If the tip > 0 transfer the tip to this contract
-        if (_tip > 0) {
-            tellorToken.transferFrom(msg.sender, address(this), _tip);
-        }
- 
+        require (_tip >= 5, "Tip must be greater than 5");//must be greater than 5 loyas so each miner gets at least 1 loya
+        tellorToken.transferFrom(msg.sender, address(this), _tip);
         //Update the information for the request that should be mined next based on the tip submitted
         updateOnDeck(self, _requestId, _tip);
         emit TipAdded(msg.sender, _requestId, _tip, self.requestDetails[_requestId].apiUintVars[keccak256("totalTip")]);
     }
 
-     /**
-    * @dev This fucntion is called by submitMiningSolution and adjusts the difficulty, sorts and stores the first
+    /**
+    * @dev This function is called by submitMiningSolution and adjusts the difficulty, sorts and stores the first
     * 5 values received, pays the miners, the dev share and assigns a new challenge
     * @param _requestId for the current request being mined
     */
     function newBlock(TellorStorage.TellorStorageStruct storage self, uint256 _requestId) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         TokenInterface tellorToken = TokenInterface(self.addressVars[keccak256("tellorToken")]);
-        selectNewValidators(self,true);
         uint256 _timeOfLastNewValue = now - (now % 1 minutes);
         self.uintVars[keccak256("timeOfLastNewValue")] = _timeOfLastNewValue;
         //The sorting algorithm that sorts the values of the first five values that come in
         TellorStorage.Details[5] memory a = self.currentMiners;
-        
                 uint256 i;
                 for (i = 1; i < 5; i++) {
                     uint256 temp = a[i].value;
@@ -105,7 +93,6 @@ library TellorLibrary {
             self.uintVars[keccak256("currentTotalTips")] - (self.uintVars[keccak256("currentTotalTips")] % 5),
             self.currentChallenge
         );
-
         //Save the official(finalValue), timestamp of it, 5 miners and their submitted values for it, and its block number
         _request.finalValues[_timeOfLastNewValue] = a[2].value;
         _request.requestTimestamps.push(_timeOfLastNewValue);
@@ -125,6 +112,8 @@ library TellorLibrary {
         //if the currentRequestId is not zero(currentRequestId exists/something is being mined) select the requestId with the hightest payout
         //else wait for a new tip to mine
         if (_topId > 0) {
+            selectNewValidators(self,true);
+            self.currentChallenge = keccak256(abi.encodePacked(randomnumber(self,_timeOfLastNewValue,a[2].value), self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
             //Update the current request to be mined to the requestID with the highest payout
             self.uintVars[keccak256("currentTotalTips")] = self.requestDetails[_topId].apiUintVars[keccak256("totalTip")];
             //Remove the currentRequestId/onDeckRequestId from the requestQ array containing the rest of the 50 requests
@@ -139,15 +128,12 @@ library TellorLibrary {
             //Reset the requestId TotalTip to 0 for the currentRequestId/onDeckRequestId since it will be mined next
             //and the tip is going to the current timestamp miners. The tip for the API needs to be reset to zero
             self.requestDetails[_topId].apiUintVars[keccak256("totalTip")] = 0;
-
             //gets the max tip in the in the requestQ[51] array and its index within the array??
             uint256 newRequestId = TellorGettersLibrary.getTopRequestID(self);
-            //Issue the the next challenge
-            self.currentChallenge = keccak256(abi.encodePacked(self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
-            emit NewChallenge(
+            //Issue the the next requestID 
+           emit NewChallenge(
                 self.currentChallenge,
                 _topId,
-                self.uintVars[keccak256("difficulty")],
                 self.uintVars[keccak256("currentTotalTips")]
             );
             emit NewRequestOnDeck(
@@ -171,35 +157,27 @@ library TellorLibrary {
     {
         //requre miner is staked
         require(self.stakerDetails[msg.sender].currentStatus == 1, "Miner status is not staker");
-
         //Check the miner is submitting the pow for the current request Id
-        require(_requestId == self.uintVars[keccak256("currentRequestId")], "RequestId is wrong");
-        
+        require(_requestId == self.uintVars[keccak256("currentRequestId")], "RequestId is wrong");     
         //Check the validator submitting data is one of the selected validators
         require(self.validValidator[msg.sender] == true, "Not a selected validator");
         //Make sure the miner does not submit a value more than once
         require(self.minersByChallenge[self.currentChallenge][msg.sender] == false, "Miner already submitted the value");
-
         //Save the miner and value received
         self.currentMiners[self.uintVars[keccak256("slotProgress")]].value = _value;
         self.currentMiners[self.uintVars[keccak256("slotProgress")]].miner = msg.sender;
-
         //Add to the count how many values have been submitted, since only 5 are taken per request
         self.uintVars[keccak256("slotProgress")]++;
-
         //Update the miner status to true once they submit a value so they don't submit more than once
         self.minersByChallenge[self.currentChallenge][msg.sender] = true;
-
         emit SolutionSubmitted(msg.sender, _requestId, _value, self.currentChallenge);
-
         //If 5 values have been received, adjust the difficulty otherwise sort the values until 5 are received
+        //Once a validator submits data set their status back to false
+        self.validValidator[msg.sender] = false;
         if (self.uintVars[keccak256("slotProgress")] == 5) {
             newBlock(self, _requestId);
         }
-        //Once a validator submits data set their status back to false
-        self.validValidator[msg.sender] == false;
     }
-
 
    /**
     * @dev This function updates APIonQ and the requestQ when requestData or addTip are ran
@@ -209,34 +187,29 @@ library TellorLibrary {
     function updateOnDeck(TellorStorage.TellorStorageStruct storage self, uint256 _requestId, uint256 _tip) internal {
         TellorStorage.Request storage _request = self.requestDetails[_requestId];
         uint256 onDeckRequestId = TellorGettersLibrary.getTopRequestID(self);
-   
-        //If the tip >0 update the tip for the requestId
-        if (_tip > 0) {
-            _request.apiUintVars[keccak256("totalTip")] = _request.apiUintVars[keccak256("totalTip")].add(_tip);
-        }
+        _request.apiUintVars[keccak256("totalTip")] = _request.apiUintVars[keccak256("totalTip")].add(_tip);
         //Set _payout for the submitted request
         uint256 _payout = _request.apiUintVars[keccak256("totalTip")];
-
         //If there is no current request being mined
         //then set the currentRequestId to the requestid of the requestData or addtip requestId submitted,
         // the totalTips to the payout/tip submitted, and issue a new mining challenge
         if (self.uintVars[keccak256("currentRequestId")] == 0) {
-            _request.apiUintVars[keccak256("totalTip")] = 0;
             self.uintVars[keccak256("currentRequestId")] = _requestId;
             self.uintVars[keccak256("currentTotalTips")] = _payout;
             self.currentChallenge = keccak256(abi.encodePacked(_payout, self.currentChallenge, blockhash(block.number - 1))); // Save hash for next proof
-            selectNewValidators(self, false);
+            selectNewValidators(self,true);
             emit NewChallenge(
                 self.currentChallenge,
                 self.uintVars[keccak256("currentRequestId")],
-                self.uintVars[keccak256("difficulty")],
                 self.uintVars[keccak256("currentTotalTips")]
             );
-        } else {
+        } else if (_requestId == self.uintVars[keccak256("currentRequestId")]) {
+                self.uintVars[keccak256("currentTotalTips")] = self.uintVars[keccak256("currentTotalTips")] + _payout;
+        }else {
             //If there is no OnDeckRequestId
             //then replace/add the requestId to be the OnDeckRequestId, queryHash and OnDeckTotalTips(current highest payout, aside from what
             //is being currently mined)
-            if (_payout > self.requestDetails[onDeckRequestId].apiUintVars[keccak256("totalTip")] || (onDeckRequestId == 0)) {
+            if (_payout > self.requestDetails[onDeckRequestId].apiUintVars[keccak256("totalTip")]) {
                 //let everyone know the next on queue has been replaced
                 emit NewRequestOnDeck(_requestId, _payout);
             }
@@ -250,22 +223,19 @@ library TellorLibrary {
                 //we have to zero out the oldOne
                 //if the _payout is greater than the current minimum payout in the requestQ[51] or if the minimum is zero
                 //then add it to the requestQ array aand map its index information to the requestId and the apiUintvars
-                if (_payout > _min || _min == 0) {
+                if (_payout > _min) {
                     self.requestQ[_index] = _payout;
                     self.requestDetails[self.requestIdByRequestQIndex[_index]].apiUintVars[keccak256("requestQPosition")] = 0;
                     self.requestIdByRequestQIndex[_index] = _requestId;
                     _request.apiUintVars[keccak256("requestQPosition")] = _index;
                 }
                 // else if the requestid is part of the requestQ[51] then update the tip for it
-            } else if (_tip > 0) {
-                self.requestQ[_request.apiUintVars[keccak256("requestQPosition")]] += _tip;
+            } else{
+                self.requestQ[_request.apiUintVars[keccak256("requestQPosition")]] = _payout;
             }
         }
     }
     
-
-
-
     /**
     * @dev Reselects validators if any of the first five fail to submit data
     */
@@ -297,19 +267,11 @@ library TellorLibrary {
             i++;
             r = randomnumber(self,self.stakers.length,i);
             potentialValidator = self.stakers[r];
-            if(_reset){
-                    self.selectedValidators.push(potentialValidator);
-                    emit NewValidatorsSelected(potentialValidator);
-                    self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
-                    j++; 
-            }
-            else{ //do we loop through and remove validValidator after block?
-                if(!self.validValidator[potentialValidator]){
+            if(!self.validValidator[potentialValidator]){
                     self.selectedValidators.push(potentialValidator);
                     emit NewValidatorsSelected(potentialValidator);
                     self.validValidator[potentialValidator] = true;//used to check if they are a selectedvalidator (better than looping through array)
                     j++;
-               }
             }
        }
          self.uintVars[keccak256("lastSelected")] = now;

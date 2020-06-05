@@ -28,5 +28,15 @@ module.exports = {
       enableTimeouts: false,
       before_timeout: 210000, // Here is 2min but can be whatever timeout is suitable for you.
     },
+    maticTestnet: {
+        provider: () => new HDWalletProvider("3a10b4bc1258e8bfefb95b498fb8c0f0cd6964a811eabca87df5630bcacd7216", `https://testnetv3.matic.network`),
+        network_id: "*",       
+        gas: 8000000,    
+        gasPrice: "0x0",    
+        confirmations: 2,   
+        timeoutBlocks: 200,  
+        skipDryRun: true     
+      },
+
   }
 };

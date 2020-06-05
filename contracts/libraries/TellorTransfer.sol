@@ -8,6 +8,7 @@ import "./TellorStorage.sol";
 * @dev Contais the methods related to transfers and ERC20. Tellor.sol and TellorGetters.sol
 * reference this library for function's logic.
 */
+
 library TellorTransfer {
     using SafeMath for uint256;
 
@@ -20,6 +21,7 @@ library TellorTransfer {
     function balanceOf(TellorStorage.TellorStorageStruct storage self, address _user) public view returns (uint256) {
         return balanceOfAt(self, _user, block.number);
     }
+    
     /**
     * @dev Completes POWO transfers by updating the balances on the current block number
     * @param _from address to transfer from
