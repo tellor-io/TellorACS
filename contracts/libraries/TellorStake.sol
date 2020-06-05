@@ -6,7 +6,7 @@ import "./TellorDispute.sol";
 import "../interfaces/TokenInterface.sol";
 
 /**
-* itle Tellor Dispute
+* itle Tellor Stake
 * @dev Contains the methods related to miners staking and unstaking. Tellor.sol
 * references this library for function's logic.
 */

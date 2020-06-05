@@ -19,11 +19,7 @@ library TellorGettersLibrary {
     * @dev This function gets the 5 miners currently selected for providing data
     * @return miners an array of the miner addresses
     */
-    function getCurrentMiners(TellorStorage.TellorStorageStruct storage self) 
-        internal 
-        view 
-        returns(address[] memory miners)
-    {
+    function getCurrentMiners(TellorStorage.TellorStorageStruct storage self) internal view returns(address[] memory miners){
         return self.selectedValidators;
     }
 
